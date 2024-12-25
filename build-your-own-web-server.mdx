@@ -1,0 +1,156 @@
+---
+title: Build Your Own Web Server
+summary: Create a basic HTTP server to serve requests and responses. Learn about the HTTP protocol, socket programming, and concurrency.
+skills:
+- HTTP
+- Socket Programming
+- Concurrency
+difficulty: Intermediate
+category: Web Development
+estimatedTime: 4-6 hours
+---
+
+This challenge is inspired by web servers like Apache and Nginx, which form the backbone of modern web applications. By building your own HTTP server, you'll learn about the fundamentals of the HTTP protocol, socket programming, and how servers handle client requests.
+
+## Table of Contents
+
+Understanding how web servers work is a key part of web development and network programming. Key principles include:
+
+- **Request-Response Cycle**: Handling HTTP requests and sending appropriate responses.
+- **Concurrency**: Managing multiple client connections simultaneously.
+- **Scalability**: Designing a server to handle increasing traffic efficiently.
+
+This challenge will provide insights into the inner workings of web servers and deepen your understanding of web architecture.
+
+## The Challenge
+
+Your task is to build a basic HTTP server that:
+
+1. Accepts incoming client connections over TCP.
+2. Parses HTTP requests and sends appropriate responses.
+3. Serves static files (e.g., HTML, CSS, JavaScript).
+4. Supports concurrency to handle multiple clients simultaneously.
+
+## Supported Features
+
+Your server should support the following core functionality:
+
+1. **Listening for Connections**:
+   - Bind to a specified port and listen for incoming client connections.
+
+2. **HTTP Request Handling**:
+   - Parse HTTP requests to extract method, path, headers, and body.
+   - Handle `GET` and `POST` requests.
+
+3. **Serving Static Files**:
+   - Serve files from a specified directory.
+   - Respond with appropriate HTTP status codes and headers (e.g., `200 OK`, `404 Not Found`).
+
+4. **Concurrency**:
+   - Use multi-threading, multi-processing, or asynchronous I/O to handle multiple clients simultaneously.
+
+5. **Graceful Shutdown**:
+   - Allow the server to shut down gracefully when terminated.
+
+## Example Usage
+
+Here’s how your server should behave:
+
+1. **Start the Server**:
+   - Run the server on a specified port, serving files from a given directory.
+
+```bash
+$ myserver --port 8080 --directory ./public
+Server running at http://localhost:8080
+```
+
+2. **Handle Requests**:
+- Respond to HTTP requests with the appropriate file or error message.
+
+```bash
+# Client request
+GET /index.html HTTP/1.1
+Host: localhost:8080
+
+# Server response
+HTTP/1.1 200 OK
+Content-Type: text/html
+
+<html>
+  <body>
+    <h1>Welcome to My Server</h1>
+  </body>
+</html>
+```
+
+3. **Serve Static Files**:
+- Respond to requests for files in the specified directory.
+
+```bash
+$ curl http://localhost:8080/style.css
+HTTP/1.1 200 OK
+Content-Type: text/css
+
+body {
+  font-family: Arial, sans-serif;
+}
+```
+
+4. **Handle Errors**:
+- Respond with `404 Not Found` for missing files.
+
+```bash
+$ curl http://localhost:8080/missing.html
+HTTP/1.1 404 Not Found
+Content-Type: text/plain
+
+File not found
+```
+
+## Implementation Steps
+
+1. **Socket Programming**:
+- Create a TCP socket and bind it to a specified port.
+- Accept incoming connections and read data from clients.
+
+2. **HTTP Parsing**:
+- Parse the HTTP request to extract the method, path, headers, and body.
+- Implement basic validation for HTTP request formats.
+
+3. **Serving Files**:
+- Use the file path from the request to locate files in the specified directory.
+- Serve files with appropriate content types (e.g., HTML, CSS, JS, images).
+
+4. **Concurrency**:
+- Use threads, processes, or asynchronous I/O to handle multiple clients at the same time.
+
+5. **Response Formatting**:
+- Format HTTP responses with status lines, headers, and bodies.
+- Include proper error handling for missing files or invalid requests.
+
+6. **Logging**:
+- Log client requests and server responses to the console or a log file.
+
+## Extra Credit
+
+Extend your web server with the following features:
+
+1. **HTTP/1.1 Features**:
+- Add support for persistent connections and the `Connection: keep-alive` header.
+
+2. **Dynamic Routing**:
+- Add support for routing, allowing dynamic responses based on the request path.
+
+3. **MIME Types**:
+- Serve files with correct MIME types based on their extensions.
+
+4. **Security**:
+- Implement basic security features, such as protection against directory traversal attacks.
+
+5. **HTTPS**:
+- Add support for HTTPS using TLS/SSL.
+
+6. **Load Testing**:
+- Benchmark your server with tools like `ab` or `wrk` and optimize for performance.
+
+By building this web server, you’ll develop a solid understanding of the HTTP protocol and foundational web technologies, giving you the skills to troubleshoot and optimize real-world web applications.

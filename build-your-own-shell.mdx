@@ -1,0 +1,133 @@
+---
+title: Build Your Own Shell
+summary: Implement a Unix shell from scratch. Gain hands-on experience with process management, command interpretation, and system calls.
+skills:
+- Process Management
+- Command Parsing
+- Systems Programming
+difficulty: Advanced
+category: Systems Programming
+estimatedTime: 8-10 hours
+---
+
+This challenge is inspired by Unix shells like `bash` and `zsh`, essential tools for interacting with operating systems. By building your own shell, you'll gain deep insights into process management, command execution, and system programming fundamentals.
+
+## Table of Contents
+
+A shell is a core component of Unix-like operating systems, adhering to the principles of:
+
+- **Interactivity**: Enabling users to execute commands in real time.
+- **Flexibility**: Supporting both simple commands and complex scripts.
+- **Efficiency**: Acting as a lightweight interface between the user and the operating system.
+
+This challenge will teach you how shells work under the hood and give you a deeper appreciation for these tools.
+
+## The Challenge
+
+Your task is to create a basic Unix shell that can:
+
+1. Interpret and execute commands entered by the user.
+2. Support features like piping, redirection, and background processes.
+3. Handle multiple built-in commands (e.g., `cd`, `exit`, `help`).
+
+## Supported Features
+
+Your shell should support the following core functionality:
+
+1. **Interactive Prompt**:
+   - Display a prompt (e.g., `mysh>`) to the user.
+   - Accept and execute commands entered by the user.
+
+2. **Command Execution**:
+   - Execute commands using system calls like `execvp`.
+   - Handle both absolute paths and commands in the system `PATH`.
+
+3. **Built-in Commands**:
+   - Implement basic built-ins like `cd`, `exit`, and `help`.
+   - Handle errors gracefully (e.g., invalid commands or arguments).
+
+4. **Piping**:
+   - Support piping (`|`) to connect the output of one command to the input of another.
+
+5. **Redirection**:
+   - Handle input (`<`) and output (`>`, `>>`) redirection.
+
+6. **Background Processes**:
+   - Allow commands to run in the background using `&`.
+
+7. **Signal Handling**:
+   - Respond appropriately to signals like `Ctrl+C` to prevent abrupt termination.
+
+## Example Usage
+
+Here’s how your shell should behave:
+
+```bash
+# Start the shell
+$ ./mysh
+mysh> echo "Hello, world!"
+Hello, world!
+
+mysh> ls -l | grep ".txt" > text_files.txt
+
+mysh> cat < text_files.txt
+file1.txt
+file2.txt
+
+mysh> cd /home/user
+mysh> pwd
+/home/user
+
+mysh> sleep 5 &
+[1] 12345  # Job ID and process ID
+
+mysh> exit
+```
+
+## Implementation Steps
+
+1. **Interactive Prompt**:
+- Continuously display a prompt and wait for user input.
+- Tokenize the input into commands and arguments.
+
+2. **Command Parsing**:
+- Split commands into tokens and identify operators like `|`, `>`, and `<`.
+- Support parsing for complex commands with multiple pipes or redirections.
+
+3. **Process Management**:
+- Use `fork()` to create child processes and `execvp()` to execute commands.
+- Use `waitpid()` to manage foreground and background processes.
+
+4. **Built-in Commands**:
+- Implement basic built-in commands directly in the shell (e.g., `cd` modifies the current working directory of the shell process).
+
+5. **Piping and Redirection**:
+- Use `pipe()` to set up communication between processes.
+- Redirect file descriptors for input and output using `dup2()`.
+
+6. **Signal Handling**:
+- Override default signal handlers for `SIGINT` and `SIGTSTP`.
+
+## Extra Credit
+
+Extend your shell with the following features:
+
+1. **Job Control**:
+- Implement `jobs`, `fg`, and `bg` commands to manage background and stopped processes.
+
+2. **Command History**:
+- Add support for recalling previous commands using the up/down arrow keys.
+
+3. **Scripting Support**:
+- Allow execution of shell scripts with `#!/path/to/mysh`.
+
+4. **Environment Variables**:
+- Add support for setting, getting, and using environment variables.
+
+5. **Autocomplete**:
+- Implement tab-completion for commands and file paths.
+
+6. **Advanced Redirection**:
+- Support advanced redirection patterns like `2>&1` for combining standard output and error.
+
+Building your own shell will give you a deeper understanding of the core principles of operating systems and command-line tools, making you a more proficient systems programmer.

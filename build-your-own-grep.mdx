@@ -1,0 +1,107 @@
+---
+title: Build Your Own Grep Tool
+summary: Recreate the `grep` command to search for patterns in files. Explore regular expressions, file searching algorithms, and command-line arguments.
+skills:
+- Regular Expressions
+- File I/O
+- Command-Line
+- Arguments
+- Algorithms
+difficulty: Intermediate
+category: Text Processing
+estimatedTime: 4-6 hours
+---
+
+This challenge is inspired by the `grep` command-line tool in Unix-like systems. The `grep` tool searches for patterns in files using regular expressions and outputs the matching lines. By building your own version of `grep`, you'll deepen your understanding of regular expressions, text processing, and file I/O.
+
+## Table of Contents
+
+The tools in Linux and Unix-like systems are excellent examples of good software engineering because they follow the _Unix Philosophies_ of:
+
+- **Modularity**: Each tool should do one thing well.
+- **Composability**: Tools can be combined to perform more complex tasks.
+
+Understanding and implementing tools like `grep` will help you appreciate these principles in practice. You can read more about the Unix Philosophy in [_The Art of Unix Programming_](http://www.catb.org/~esr/writings/taoup/html).
+
+## The Challenge
+
+Your task is to create a command-line tool that searches for a specified pattern in a file and outputs the matching lines. Your tool should support regular expressions and accept both the search pattern and the file path as command-line arguments.
+
+To understand the functional requirements of `grep`, refer to its `man` page:
+
+```bash
+man grep
+```
+
+## Supported Arguments
+
+Your tool should support the following command-line arguments:
+
+- `-i` or `--ignore-case`: Perform a case-insensitive search.
+- `-v` or `--invert-match`: Invert the search to display lines that do not match the pattern.
+- `-c` or `--count`: Display only the count of matching lines.
+- `-n` or `--line-number`: Display line numbers along with matching lines.
+- `-r` or `--recursive`: Search for the pattern recursively in all files under a directory.
+
+Additionally, your tool should handle the following cases:
+
+- If no pattern or file is specified, display usage instructions.
+- If only the pattern is specified, read input from standard input (e.g., via a pipe).
+
+## Example Usage
+
+Here’s how your tool should behave:
+
+```bash
+# Search for "error" in a file
+$ grep "error" file.txt
+An error occurred in the system.
+
+# Case-insensitive search
+$ grep -i "error" file.txt
+An error occurred in the system.
+ERROR: Unable to connect.
+
+# Count matching lines
+$ grep -c "error" file.txt
+2
+
+# Display line numbers
+$ grep -n "error" file.txt
+2: An error occurred in the system.
+5: ERROR: Unable to connect.
+
+# Invert the match
+$ grep -v "error" file.txt
+No issues detected.
+
+# Recursive search in a directory
+$ grep -r "error" logs/
+logs/system.log:2: An error occurred in the system.
+logs/connection.log:5: ERROR: Unable to connect.
+
+# Read from standard input
+$ echo "This is a test" | grep "test"
+This is a test
+```
+
+## Regular Expressions
+
+Support for regular expressions is central to the functionality of `grep`. At a minimum, your implementation should handle:
+
+- Literal string matches (e.g., `error`)
+- Wildcards (e.g., `er.*`)
+- Anchors (e.g., `^start` or `end$`)
+
+You can learn more about regular expressions in [_Mastering Regular Expressions_](https://www.oreilly.com/library/view/mastering-regular-expressions/).
+
+## Extra Credit
+
+Extend your implementation with the following features:
+
+1. **Colorized Output**: Highlight the matched pattern in the output using terminal colors.
+2. **Multiline Search**: Support for matching patterns across multiple lines.
+3. **Parallel Processing**: Optimize recursive searches using multiple threads or processes.
+4. **Contextual Matches**: Add `-A`, `-B`, and `-C` options to display lines around the matching line (e.g., `-A 2` for 2 lines after the match).
+
+With these extensions, your tool can handle even more complex text processing scenarios.

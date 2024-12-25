@@ -1,0 +1,98 @@
+---
+title: Build Your Own JSON Parser
+summary: Implement a JSON parser from scratch. Dive deep into parsing techniques, recursive algorithms, and data structures.
+skills:
+- Parsing
+- Data Structures
+- Recursion
+- Error Handling
+difficulty: Intermediate
+category: Parsing
+estimatedTime: 4-6 hours
+---
+
+This challenge is inspired by the need to understand the core principles behind JSON parsing. JSON (JavaScript Object Notation) is a lightweight data interchange format widely used in web development and APIs. By building your own JSON parser, you'll gain insight into parsing techniques, data structures, and error handling.
+
+## Table of Contents
+
+Understanding how JSON is parsed is critical for developing a deeper appreciation of the tools we use daily. The process aligns with the following programming principles:
+
+- **Precision**: Handle complex data structures like nested objects and arrays with care.
+- **Error Handling**: Identify and manage malformed JSON gracefully.
+- **Efficiency**: Ensure your parser can handle large inputs without significant performance degradation.
+
+You can learn more about JSON and its structure in the [JSON official documentation](https://www.json.org/json-en.html).
+
+## The Challenge
+
+Your task is to implement a JSON parser that can parse a JSON string into an equivalent in-memory data structure, such as a dictionary or object in your chosen programming language.
+
+The JSON parser should handle:
+
+- Objects: `{ "key": "value" }`
+- Arrays: `[1, 2, 3]`
+- Strings: `"Hello, World!"`
+- Numbers: `42`, `3.14`, `-1`
+- Booleans: `true`, `false`
+- Null: `null`
+
+## Supported Features
+
+Your parser should support the following features:
+
+1. **Whitespace Handling**: Ignore whitespaces outside values.
+2. **Error Reporting**: Provide clear error messages for malformed JSON.
+3. **Recursive Parsing**: Handle nested structures using recursion.
+4. **Validation**: Check for trailing commas, unmatched braces, and other common issues.
+
+## Example Usage
+
+Here's how your parser should behave:
+
+```python
+# Parse a JSON object
+json_string = '{"name": "Alice", "age": 30, "isStudent": false}'
+parsed = parse_json(json_string)
+print(parsed)
+# Output: {"name": "Alice", "age": 30, "isStudent": False}
+
+# Parse a JSON array
+json_string = '[1, 2, "three", null]'
+parsed = parse_json(json_string)
+print(parsed)
+# Output: [1, 2, "three", None]
+
+# Handle nested structures
+json_string = '{"person": {"name": "Alice", "age": 30}, "hobbies": ["reading", "swimming"]}'
+parsed = parse_json(json_string)
+print(parsed)
+# Output: {"person": {"name": "Alice", "age": 30}, "hobbies": ["reading", "swimming"]}
+
+# Handle errors
+json_string = '{"name": "Alice", "age":}'
+try:
+    parsed = parse_json(json_string)
+except ValueError as e:
+    print(e)
+# Output: Error: Unexpected token at position 20
+```
+
+## Parsing Steps
+
+To implement the JSON parser, follow these steps:
+
+1. **Tokenization**: Break the JSON string into tokens (`{`, `}`, `[`, `]`, `:`, `,`, etc.).
+2. **Recursive Descent Parsing**: Build the in-memory representation by recursively processing tokens.
+3. **Error Handling**: Detect and report issues like unexpected tokens or mismatched brackets.
+
+## Extra Credit
+
+Extend your JSON parser with the following features:
+
+1. **Pretty Printing**: Add a feature to format the parsed JSON into a readable string.
+2. **Streaming Support**: Parse large JSON files incrementally to minimize memory usage.
+3. **Custom Data Types**: Support for parsing custom data types, such as datetime strings into `datetime` objects.
+4. **Performance Optimization**: Benchmark your parser against standard libraries and optimize its speed and memory usage.
+5. **Strict Mode**: Add an option to enforce strict compliance with the JSON standard.
+
+With these enhancements, your JSON parser can become a powerful learning tool and a potential utility for custom use cases.

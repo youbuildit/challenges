@@ -1,0 +1,127 @@
+---
+title: Build Your Own Load Balancer
+summary: Implement a simple load balancer to distribute network traffic across multiple servers. Dive into networking concepts, concurrency, and load-balancing strategies.
+skills:
+- Networking
+- Concurrency
+- Load Balancing
+- Algorithms
+difficulty: Advanced
+category: Networking
+estimatedTime: 8-10 hours
+---
+
+This challenge is inspired by load balancers, critical components in scalable web architectures. A load balancer efficiently distributes incoming traffic across multiple backend servers, improving reliability, performance, and scalability. By building your own load balancer, you'll gain hands-on experience with networking and concurrency, as well as an understanding of different load-balancing strategies.
+
+## Table of Contents
+
+Modern distributed systems rely heavily on load balancers to:
+
+- **Ensure Reliability**: Distribute traffic to prevent overloading any single server.
+- **Optimize Performance**: Route requests to the server best equipped to handle them.
+- **Enhance Scalability**: Add or remove backend servers dynamically.
+
+By implementing a load balancer, you’ll explore the concepts and challenges of building scalable systems.
+
+## The Challenge
+
+Your task is to create a simple load balancer that listens for incoming HTTP requests and distributes them to a set of backend servers based on a load-balancing strategy.
+
+The load balancer should support:
+
+1. **Multiple Backend Servers**: Maintain a list of backend servers and route traffic to them.
+2. **Health Checks**: Periodically check the availability of backend servers.
+3. **Load-Balancing Strategies**:
+   - Round Robin
+   - Least Connections
+   - Random
+4. **Concurrency**: Handle multiple client requests simultaneously.
+
+## Example Usage
+
+Here’s how your load balancer should behave:
+
+1. **Configuration**: Provide a list of backend servers as input.
+
+```bash
+$ myloadbalancer --servers http://localhost:8081,http://localhost:8082,http://localhost:8083
+```
+
+2. **Routing**: Distribute incoming requests to the backend servers based on the selected strategy.
+
+```bash
+# Simulate multiple client requests
+$ curl http://localhost:8000/
+$ curl http://localhost:8000/
+$ curl http://localhost:8000/
+```
+
+- Backend server logs:
+- Server 1: Received request 1
+- Server 2: Received request 2
+- Server 3: Received request 3
+
+3. **Health Checks**: If a backend server becomes unavailable, stop routing requests to it.
+
+```bash
+# Take down server 2
+$ kill -9 <server2_pid>
+
+# Client requests are redistributed:
+$ curl http://localhost:8000/
+# Backend server logs:
+# Server 1: Received request 4
+# Server 3: Received request 5
+```
+
+4. **Dynamic Server Management**: Allow adding or removing backend servers dynamically.
+
+```bash
+$ myloadbalancer add http://localhost:8084
+$ myloadbalancer remove http://localhost:8083
+```
+
+## Implementation Steps
+
+1. **Networking**:
+- Set up a server to listen for incoming HTTP requests.
+- Forward requests to backend servers and relay their responses to clients.
+
+2. **Concurrency**:
+- Use multi-threading or asynchronous I/O to handle multiple client connections simultaneously.
+
+3. **Load-Balancing Strategies**:
+- Implement Round Robin, Least Connections, and Random routing.
+- Allow users to select the desired strategy via command-line arguments.
+
+4. **Health Checks**:
+- Periodically send ping or health-check requests to backend servers.
+- Mark servers as unavailable if health checks fail.
+
+5. **Dynamic Server Management**:
+- Maintain an up-to-date list of backend servers.
+- Provide commands for adding or removing servers at runtime.
+
+## Extra Credit
+
+Extend your load balancer with the following features:
+
+1. **Weighted Load Balancing**:
+- Allow backend servers to have different weights, handling traffic proportionally.
+
+2. **Sticky Sessions**:
+- Ensure requests from the same client are routed to the same backend server.
+
+3. **TLS Support**:
+- Add SSL/TLS support to secure client connections.
+
+4. **Metrics and Logging**:
+- Track and log request counts, response times, and server status.
+
+5. **Dynamic Configuration Reload**:
+- Implement support for reloading configuration without restarting the load balancer.
+
+6. **Failover and Redundancy**:
+- Add support for fallback servers if all primary servers fail.
+
+By completing these extensions, your load balancer will approach the functionality of production-ready tools, giving you valuable insights into networking and distributed systems.

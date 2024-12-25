@@ -1,0 +1,116 @@
+---
+title: Build Your Own Docker
+summary: Implement a basic container runtime from scratch. Explore containerization concepts, Linux namespaces, cgroups, and system calls.
+skills:
+- Containerization
+- Linux Internals
+- Networking
+- System Calls
+difficulty: Advanced
+category: Systems Programming
+estimatedTime: 8-10 hours
+---
+
+This challenge is inspired by container runtimes like Docker and containerd, which allow you to isolate applications and their dependencies in lightweight environments. By building your own container runtime, you’ll gain deep insights into containerization, Linux internals, and resource management.
+
+## Table of Contents
+
+Containerization is a cornerstone of modern software development and deployment, built on these key principles:
+
+- **Isolation**: Use namespaces to isolate processes and their environment.
+- **Resource Management**: Leverage cgroups to control and limit resource usage.
+- **Efficiency**: Create lightweight and portable environments for running applications.
+
+By implementing a basic container runtime, you’ll explore these principles hands-on and better understand how container technologies work under the hood.
+
+## The Challenge
+
+Your task is to implement a minimal container runtime that can:
+
+1. Isolate a process in a new namespace.
+2. Restrict the process’s resource usage using control groups (cgroups).
+3. Run a specific command or program in the isolated environment.
+
+Your runtime should interact directly with Linux system calls to set up namespaces and cgroups.
+
+## Supported Features
+
+Your container runtime should support the following features:
+
+1. **Namespaces**:
+   - Use PID, mount, UTS, network, and IPC namespaces to isolate the container.
+   - Allow processes inside the container to have their own view of the system.
+
+2. **Cgroups**:
+   - Limit CPU, memory, and I/O usage for processes in the container.
+   - Provide configuration options for setting resource limits.
+
+3. **Root Filesystem**:
+   - Allow the container to use a specified directory as its root filesystem using `chroot`.
+
+4. **Command Execution**:
+   - Accept a command as input and execute it within the container.
+
+5. **Networking** (Optional for extra credit):
+   - Create a virtual network interface for the container.
+   - Support basic communication between the host and container.
+
+## Example Usage
+
+Here’s how your runtime should behave:
+
+```bash
+# Run a command in an isolated container
+$ myruntime run --cpu 0.5 --memory 128M --rootfs /containers/myapp /bin/bash
+
+# Inside the container, the process is isolated
+container$ ps aux
+PID   USER     COMMAND
+1     root     /bin/bash
+
+container$ exit
+```
+
+## Implementation Steps
+
+1. **Namespace Setup**:
+- Use the `unshare` system call to create new namespaces.
+- Configure PID, mount, UTS, and network namespaces for process isolation.
+
+2. **Cgroup Configuration**:
+- Create and configure cgroups for resource limitations.
+- Write resource limits (e.g., CPU shares, memory limits) to the cgroup filesystem.
+
+3. **Root Filesystem**:
+- Use the `chroot` system call to change the root directory.
+- Bind-mount essential directories like `/proc` and `/dev` inside the container.
+
+4. **Process Execution**:
+- Fork a new process to run the command inside the isolated environment.
+- Handle process cleanup and reaping of child processes.
+
+5. **Error Handling**:
+- Provide clear error messages for setup issues (e.g., insufficient permissions, missing cgroup configuration).
+
+## Extra Credit
+
+Extend your container runtime with the following features:
+
+1. **Networking**:
+- Create a virtual Ethernet device using `veth` pairs.
+- Set up a bridge to connect the host and container.
+
+2. **Image Support**:
+- Add support for downloading and extracting container images (e.g., using tarballs or OCI images).
+
+3. **CLI Interface**:
+- Provide a user-friendly command-line interface with subcommands like `run`, `stop`, and `list`.
+
+4. **Multi-Process Containers**:
+- Implement an init-like process to manage multiple processes inside the container.
+
+5. **Security**:
+- Use seccomp to restrict the system calls available to containerized processes.
+- Drop unnecessary privileges using capabilities.
+
+By completing these extensions, your runtime will resemble a simplified version of tools like Docker, giving you valuable hands-on experience with containerization concepts.

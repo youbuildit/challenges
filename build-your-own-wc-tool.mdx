@@ -1,0 +1,88 @@
+---
+title: Build Your Own wc Tool
+summary: Create a command-line tool that counts words, lines, and characters in a file. Learn about file I/O and text processing.
+skills:
+- File I/O
+- Text Processing
+- Command-Line Arguments
+difficulty: Beginner
+category: Command Line
+estimatedTime: 2-4 hours
+---
+
+This challenge is inspired by the `wc` command-line tool in Unix-like systems. The `wc` tool counts the number of words, lines, and characters in a file. By building your own version of `wc`, you'll learn about file I/O, text processing, and command-line arguments.
+
+## Table of Contents
+
+The tools within Linux and Unix-like systems are great examples of good software engineering because they follow the _Unix Philosophies_ of:
+
+- **Modularity**: Each tool should do one thing well.
+- **Composability**: Tools can be combined to perform more complex tasks.
+
+Following these principles has made the Unix command line tools some of the most widely used software in industry. If you are interested, you can read more about the Unix Philosophy in the book [_The Art of Unix Programming_](http://www.catb.org/~esr/writings/taoup/html.
+
+## The Challenge
+
+Your task is to create a command-line tool that reads a file and outputs the number of words, lines, and characters in that file. The tool should accept the file path as a command-line argument.
+
+You can read more about the functional requirements for `wc` by reading its `man` page:
+
+```bash
+man wc
+```
+
+The TL/DR version of the `wc` command is -- word, line, character, and byte count.
+
+## Supported Arguments
+
+Your tool should support the following command-line arguments:
+
+- `-w` or `--words`: Display the word count.
+- `-l` or `--lines`: Display the line count.
+- `-c` or `--characters`: Display the character count.
+- `-m` or `--bytes`: Display the byte count.
+
+Additionally, it should support passing no arguments other than the file path, which should display all counts (words, lines, and characters).
+
+## Example Usage
+
+Here's an example of how your tool should work:
+
+```bash
+# Display word count
+$ wc -w file.txt
+58164 file.txt
+
+# Display line count
+$ wc -l file.txt
+1234 file.txt
+
+# Display character count
+$ wc -c file.txt
+123456 file.txt
+
+# Display byte count
+$ wc -m file.txt
+123456 file.txt
+
+# Display all counts
+$ wc file.txt
+1234 58164 123456 file.txt
+```
+
+### `-m` or `--bytes` Count and _Locales_
+
+The `-m` or `--bytes` option should count the number of bytes in the file. This is different from the character count because it counts the number of bytes in the file, not the number of characters. This is important because different locales have different character encodings, and counting bytes is a more accurate representation of the file size.
+
+You can learn more about programming for locales and character encodings in the book [_The Unicode Standard_](https://www.unicode.org/standard/standard.html) and the article [_Locale and Culture_](https://learn.microsoft.com/en-us/globalization/locale/locale-and-culture).
+
+## Extra Credit
+
+If you want to take this challenge further, consider adding support for being able to read from standard input if no file path is specified.
+
+This would allow you to use your tool in a Unix pipeline like this:
+
+```bash
+$ cat file.txt | wc -l
+1234
+```
