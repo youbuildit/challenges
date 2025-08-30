@@ -1,0 +1,210 @@
+---
+title: Build Your Own sort Tool
+summary: Create a command-line tool for sorting text files with various comparison methods and output options. Learn about sorting algorithms, text processing, and data organization.
+skills:
+- Sorting Algorithms
+- Text Processing
+- Command-Line Arguments
+- Memory Management
+difficulty: Intermediate
+category: Command Line
+estimatedTime: 4-5 hours
+---
+
+This challenge is inspired by the `sort` command-line tool in Unix-like systems. The `sort` tool is essential for organizing and processing text data, commonly used in data analysis, log processing, and system administration. By building your own version of `sort`, you'll learn about sorting algorithms, text processing, and handling large datasets efficiently.
+
+## Table of Contents
+
+The `sort` command exemplifies efficient data processing with these key principles:
+
+- **Efficiency**: Handle large files with optimal sorting algorithms and memory management.
+- **Flexibility**: Support multiple sorting criteria and comparison methods.
+- **Stability**: Maintain relative order of equal elements when needed.
+- **Composability**: Work seamlessly with other Unix tools in pipelines.
+
+You can learn more about the original `sort` command by reading its manual page:
+
+```bash
+man sort
+```
+
+## The Challenge
+
+Your task is to create a command-line tool that sorts lines in text files according to various criteria. The tool should support different comparison methods, field-based sorting, and handle both small and large files efficiently.
+
+## Supported Arguments
+
+Your tool should support the following command-line arguments:
+
+### Basic Sorting:
+- `file...` - Input files to sort (default: standard input)
+- `-o file` - Write output to specified file
+- `-r` or `--reverse` - Sort in descending order
+- `-u` or `--unique` - Output only unique lines
+- `-s` or `--stable` - Use stable sorting algorithm
+
+### Comparison Options:
+- `-n` or `--numeric-sort` - Compare according to string numerical value
+- `-g` or `--general-numeric-sort` - Compare according to general numeric value
+- `-h` or `--human-numeric-sort` - Compare human-readable numbers (e.g., 2K, 1G)
+- `-f` or `--ignore-case` - Fold lower case to upper case characters
+- `-d` or `--dictionary-order` - Consider only blanks and alphanumeric characters
+
+### Field-Based Sorting:
+- `-k field` or `--key=field` - Sort via a key; field is F[.C][opts]
+- `-t char` or `--field-separator=char` - Use char as field separator
+
+### Advanced Options:
+- `-m` or `--merge` - Merge already sorted files
+- `-c` or `--check` - Check whether files are already sorted
+- `-b` or `--ignore-leading-blanks` - Ignore leading blanks
+- `--parallel=N` - Use N parallel processes for sorting
+
+## Example Usage
+
+Here's how your tool should work:
+
+```bash
+# Basic sorting (alphabetical)
+$ sort names.txt
+Alice
+Bob
+Charlie
+David
+
+# Reverse sort
+$ sort -r names.txt
+David
+Charlie
+Bob
+Alice
+
+# Numeric sort
+$ sort -n numbers.txt
+1
+2
+10
+20
+100
+
+# Remove duplicates while sorting
+$ sort -u duplicates.txt
+apple
+banana
+orange
+
+# Sort by specific field (comma-separated)
+$ sort -t, -k2 data.csv
+John,25,Engineer
+Alice,28,Designer
+Bob,32,Manager
+
+# Sort by numeric field
+$ sort -t, -k2n ages.csv
+Alice,25,Engineer
+Bob,28,Designer
+John,32,Manager
+
+# Case-insensitive sort
+$ sort -f mixed_case.txt
+apple
+BANANA
+cherry
+ORANGE
+
+# Human-readable numeric sort
+$ sort -h sizes.txt
+1K
+2M
+3G
+1T
+
+# Check if file is already sorted
+$ sort -c sorted_file.txt
+$ echo $?
+0
+
+# Sort multiple files and merge
+$ sort file1.txt file2.txt file3.txt > combined_sorted.txt
+
+# Sort in place (output to same file)
+$ sort -o file.txt file.txt
+
+# Sort by multiple keys (primary: field 2, secondary: field 1)
+$ sort -k2,2 -k1,1 multi_key.txt
+```
+
+## Implementation Steps
+
+1. **Input Processing**:
+   - Read from files or standard input
+   - Handle multiple input files
+   - Process lines efficiently for large files
+   - Support different character encodings
+
+2. **Sorting Algorithm Implementation**:
+   - Choose appropriate sorting algorithm (quicksort, mergesort, etc.)
+   - Implement stable sorting when required
+   - Handle memory constraints for large datasets
+   - Consider external sorting for very large files
+
+3. **Comparison Functions**:
+   - Implement lexicographic comparison (default)
+   - Add numeric comparison for numbers
+   - Support case-insensitive comparison
+   - Handle human-readable numbers (K, M, G suffixes)
+   - Implement dictionary order comparison
+
+4. **Field-Based Sorting**:
+   - Parse field specifications (-k option)
+   - Extract fields using specified separator
+   - Handle complex field ranges and sub-fields
+   - Support multiple sort keys with different options
+
+5. **Memory Management**:
+   - Optimize for large files that don't fit in memory
+   - Implement external merge sort when needed
+   - Use efficient data structures for line storage
+   - Handle memory allocation failures gracefully
+
+## Extra Credit
+
+Extend your `sort` implementation with these additional features:
+
+1. **Advanced Sorting Algorithms**:
+   - Implement different sorting algorithms (heap sort, intro sort)
+   - Add benchmarking to compare algorithm performance
+   - Support adaptive algorithms that choose based on data characteristics
+   - Implement parallel sorting for multi-core systems
+
+2. **Enhanced Field Processing**:
+   - Support regular expressions as field separators
+   - Handle quoted fields in CSV data
+   - Support complex field specifications (ranges, character positions)
+   - Add support for fixed-width field parsing
+
+3. **Locale and Internationalization**:
+   - Support locale-aware sorting (collation)
+   - Handle Unicode characters properly
+   - Support different character encodings (UTF-8, Latin-1, etc.)
+   - Implement culture-specific sorting rules
+
+4. **Performance Optimizations**:
+   - Implement multi-threaded sorting
+   - Add memory mapping for large files
+   - Support streaming sort for infinite input
+   - Optimize for specific data patterns (nearly sorted, reverse sorted)
+
+5. **Advanced Features**:
+   - Support version number sorting (1.2.10 vs 1.2.9)
+   - Add random shuffle mode
+   - Implement sampling for large dataset preview
+   - Support compressed input files
+
+6. **Debugging and Analysis**:
+   - Add verbose mode to show sorting progress
+   - Implement profiling to analyze performance bottlenecks
+   - Add memory usage reporting
+   - Support dry-run mode to validate parameters
+
+This challenge will teach you fundamental algorithms, efficient text processing, and memory management techniques that are essential for building high-performance command-line tools.

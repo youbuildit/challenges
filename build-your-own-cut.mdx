@@ -1,0 +1,195 @@
+---
+title: Build Your Own cut Tool
+summary: Create a command-line tool for extracting fields and characters from text files. Learn about text processing, string manipulation, and data extraction techniques.
+skills:
+- Text Processing
+- String Manipulation
+- Command-Line Arguments
+- Data Extraction
+difficulty: Beginner
+category: Command Line
+estimatedTime: 3-4 hours
+---
+
+This challenge is inspired by the `cut` command-line tool in Unix-like systems. The `cut` tool is essential for extracting specific columns or character ranges from structured text data, commonly used in data processing, log analysis, and CSV manipulation. By building your own version of `cut`, you'll learn about text processing, string manipulation, and efficient data extraction.
+
+## Table of Contents
+
+The `cut` command follows the Unix philosophy of focused, efficient text processing:
+
+- **Precision**: Extract exactly the data you need from structured text.
+- **Flexibility**: Support multiple extraction methods (fields, characters, bytes).
+- **Efficiency**: Process large files quickly with minimal memory usage.
+- **Composability**: Work seamlessly with other tools in Unix pipelines.
+
+You can learn more about the original `cut` command by reading its manual page:
+
+```bash
+man cut
+```
+
+## The Challenge
+
+Your task is to create a command-line tool that extracts selected portions of lines from files or standard input. The tool should support extracting by character position, byte position, or delimited fields.
+
+## Supported Arguments
+
+Your tool should support the following command-line arguments:
+
+### Selection Options (choose one):
+- `-c list` or `--characters=list` - Select by character positions
+- `-b list` or `--bytes=list` - Select by byte positions
+- `-f list` or `--fields=list` - Select by fields (delimited)
+
+### Field Options:
+- `-d delim` or `--delimiter=delim` - Use delim as field delimiter (default: TAB)
+- `-s` or `--only-delimited` - Only print lines containing delimiters
+- `--output-delimiter=string` - Use string as output delimiter
+
+### List Format:
+- `N` - The Nth character/byte/field (counted from 1)
+- `N-` - From Nth character/byte/field to end of line
+- `N-M` - From Nth to Mth character/byte/field (inclusive)
+- `-M` - From first to Mth character/byte/field
+- Multiple ranges can be comma-separated: `1,3,5-7`
+
+## Example Usage
+
+Here's how your tool should work:
+
+```bash
+# Extract specific characters
+$ echo "Hello World" | cut -c 1-5
+Hello
+
+$ echo "Hello World" | cut -c 7-
+World
+
+$ echo "Hello World" | cut -c 1,3,5
+Hlo
+
+# Extract fields from delimited data
+$ echo "apple,banana,cherry" | cut -d, -f 2
+banana
+
+$ echo -e "a:b:c\nd:e:f" | cut -d: -f 1,3
+a:c
+d:f
+
+# Process CSV file
+$ cut -d, -f 1,3 data.csv
+Name,Age
+Alice,25
+Bob,30
+Carol,28
+
+# Extract byte ranges (useful for binary or multi-byte characters)
+$ echo "Hello" | cut -b 2-4
+ell
+
+# Use different output delimiter
+$ echo "a,b,c,d" | cut -d, -f 2,4 --output-delimiter="|"
+b|d
+
+# Only show lines that contain the delimiter
+$ echo -e "no-delimiter\nhas:delimiter" | cut -d: -f 2 -s
+delimiter
+
+# Multiple files
+$ cut -d, -f 1 file1.csv file2.csv
+==> file1.csv <==
+Alice
+Bob
+
+==> file2.csv <==
+Carol
+David
+
+# Complex field ranges
+$ echo "a,b,c,d,e,f" | cut -d, -f 1,3-5
+a,c,d,e
+
+# Use TAB as delimiter (default)
+$ echo -e "col1\tcol2\tcol3" | cut -f 2
+col2
+```
+
+## Implementation Steps
+
+1. **Command-Line Parsing**:
+   - Parse extraction mode (characters, bytes, or fields)
+   - Handle delimiter specifications
+   - Parse range lists with proper error handling
+   - Validate argument combinations
+
+2. **Range Processing**:
+   - Parse range specifications (N, N-M, N-, -M)
+   - Handle comma-separated multiple ranges
+   - Sort and merge overlapping ranges for efficiency
+   - Validate range bounds and ordering
+
+3. **Character/Byte Extraction**:
+   - Extract characters by position (handle Unicode properly)
+   - Extract bytes by position (for binary data or specific encodings)
+   - Handle out-of-bounds indices gracefully
+   - Support multiple character encodings
+
+4. **Field Extraction**:
+   - Split lines using specified delimiter
+   - Extract specified field numbers
+   - Handle missing fields (fewer fields than requested)
+   - Support different output delimiters
+
+5. **Input Processing**:
+   - Read from files or standard input
+   - Process lines efficiently for large files
+   - Handle different line endings (Unix, Windows, Mac)
+   - Implement proper error handling for file access
+
+## Extra Credit
+
+Extend your `cut` implementation with these additional features:
+
+1. **Advanced Range Processing**:
+   - Support reverse ranges (M-N where M > N)
+   - Add step specification (every Nth character/field)
+   - Implement range validation and optimization
+   - Support negative indexing (counting from end)
+
+2. **Enhanced Delimiter Support**:
+   - Support regular expressions as delimiters
+   - Handle quoted fields in CSV data
+   - Support escape sequences in delimiters (\t, \n, etc.)
+   - Add support for multi-character delimiters
+
+3. **Character Encoding Support**:
+   - Proper Unicode handling for multi-byte characters
+   - Support different character encodings (UTF-8, Latin-1, etc.)
+   - Handle byte-order marks (BOM) in files
+   - Provide encoding detection capabilities
+
+4. **Performance Optimizations**:
+   - Implement streaming processing for large files
+   - Optimize memory usage for wide files
+   - Add parallel processing for multiple files
+   - Implement efficient range merging algorithms
+
+5. **Advanced Features**:
+   - Support field reordering and duplication
+   - Add complement mode (extract everything except specified ranges)
+   - Implement header preservation for CSV files
+   - Support fixed-width field extraction
+
+6. **Output Formatting**:
+   - Add padding options for consistent column widths
+   - Support custom output formatting
+   - Implement alignment options (left, right, center)
+   - Add number formatting for numeric fields
+
+7. **Error Handling and Validation**:
+   - Provide detailed error messages for invalid ranges
+   - Add warnings for out-of-bounds field access
+   - Implement dry-run mode to validate parameters
+   - Support different error handling strategies
+
+This challenge will teach you essential text processing skills, string manipulation techniques, and the importance of handling edge cases in data extraction tools.

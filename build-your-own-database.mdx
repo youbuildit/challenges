@@ -1,0 +1,200 @@
+---
+title: Build Your Own Database
+summary: Create a relational database with SQL parsing, B-tree indexes, transactions, and persistence. Learn about database internals, storage engines, and query optimization.
+skills:
+- Database Systems
+- Parsing
+- Data Structures
+- File Systems
+difficulty: Advanced
+category: Database
+estimatedTime: 12-15 hours
+---
+
+This challenge is inspired by relational database systems like PostgreSQL, MySQL, and SQLite. By building your own database, you'll learn about storage engines, query parsing, indexing, transaction management, and the fundamental algorithms that power modern database systems.
+
+## Table of Contents
+
+Understanding how databases work is crucial for building scalable applications and optimizing data operations. Key principles include:
+
+- **ACID Properties**: Ensure Atomicity, Consistency, Isolation, and Durability for reliable transactions.
+- **Efficient Storage**: Use B-trees and other data structures for fast data retrieval and updates.
+- **Query Optimization**: Parse and optimize SQL queries for optimal performance.
+- **Concurrency Control**: Handle multiple simultaneous operations safely.
+
+You can learn more about database internals in books like [Database Internals](https://www.databass.dev/) and [Designing Data-Intensive Applications](https://dataintensive.net/).
+
+## The Challenge
+
+Your task is to implement a relational database system that supports:
+
+1. SQL parsing and execution
+2. Table creation and data manipulation
+3. B-tree indexes for fast lookups
+4. Transaction management with ACID properties
+5. Disk-based storage with persistence
+6. Basic query optimization
+
+## Supported Features
+
+Your database implementation should support the following core functionality:
+
+1. **Data Definition Language (DDL)**:
+   - `CREATE TABLE` - Create new tables with column definitions
+   - `DROP TABLE` - Remove tables from the database
+   - `ALTER TABLE` - Modify table structure (add/drop columns)
+   - `CREATE INDEX` - Create indexes on table columns
+
+2. **Data Manipulation Language (DML)**:
+   - `INSERT INTO` - Add new rows to tables
+   - `SELECT` - Query data with WHERE, ORDER BY, GROUP BY, HAVING
+   - `UPDATE` - Modify existing rows
+   - `DELETE FROM` - Remove rows from tables
+
+3. **Data Types**:
+   - `INTEGER` - 32-bit signed integers
+   - `VARCHAR(n)` - Variable-length strings
+   - `BOOLEAN` - True/false values
+   - `DATE` - Date values (YYYY-MM-DD)
+   - `DECIMAL(p,s)` - Fixed-point decimal numbers
+
+4. **Indexes**:
+   - B-tree indexes for fast key lookups
+   - Support for primary keys and unique constraints
+   - Composite indexes on multiple columns
+
+5. **Transactions**:
+   - `BEGIN TRANSACTION` - Start a transaction
+   - `COMMIT` - Save transaction changes
+   - `ROLLBACK` - Undo transaction changes
+   - Support for isolation levels
+
+## Example Usage
+
+Here's how your database should behave:
+
+```sql
+-- Create a table
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    age INTEGER,
+    created_date DATE
+);
+
+-- Insert data
+INSERT INTO users (id, name, email, age, created_date) 
+VALUES (1, 'Alice', 'alice@example.com', 25, '2024-01-15');
+
+INSERT INTO users (id, name, email, age, created_date) 
+VALUES (2, 'Bob', 'bob@example.com', 30, '2024-01-16');
+
+-- Query data
+SELECT * FROM users WHERE age > 25;
+-- Result:
+-- id | name | email           | age | created_date
+-- 2  | Bob  | bob@example.com | 30  | 2024-01-16
+
+-- Update data
+UPDATE users SET age = 26 WHERE name = 'Alice';
+
+-- Create an index for faster queries
+CREATE INDEX idx_users_email ON users(email);
+
+-- Use transactions
+BEGIN TRANSACTION;
+INSERT INTO users (id, name, email, age, created_date) 
+VALUES (3, 'Carol', 'carol@example.com', 28, '2024-01-17');
+UPDATE users SET age = age + 1 WHERE id = 1;
+COMMIT;
+
+-- Aggregation queries
+SELECT COUNT(*) as total_users, AVG(age) as avg_age FROM users;
+```
+
+## Implementation Steps
+
+1. **Storage Engine**:
+   - Implement page-based storage for disk persistence
+   - Design table and index file formats
+   - Handle page allocation and deallocation
+   - Implement buffer pool for caching frequently accessed pages
+
+2. **B-Tree Implementation**:
+   - Build B-tree data structure for indexes
+   - Support insertion, deletion, and range queries
+   - Handle node splitting and merging
+   - Implement both clustered and non-clustered indexes
+
+3. **SQL Parser**:
+   - Implement a tokenizer for SQL syntax
+   - Build a recursive descent parser for SQL statements
+   - Create an Abstract Syntax Tree (AST) representation
+   - Handle syntax error reporting and recovery
+
+4. **Query Execution Engine**:
+   - Implement operators for selection, projection, join, aggregation
+   - Build a query execution plan from parsed SQL
+   - Support different join algorithms (nested loop, hash join)
+   - Implement sorting and grouping operations
+
+5. **Transaction Management**:
+   - Implement Write-Ahead Logging (WAL) for durability
+   - Support ACID properties with proper isolation
+   - Handle concurrent transactions with locking or MVCC
+   - Implement deadlock detection and resolution
+
+6. **Schema Management**:
+   - Store table and column metadata
+   - Implement data type validation and conversion
+   - Handle constraints (PRIMARY KEY, UNIQUE, NOT NULL)
+   - Support foreign key relationships
+
+## Extra Credit
+
+Extend your database with the following advanced features:
+
+1. **Query Optimization**:
+   - Implement a cost-based query optimizer
+   - Support query plan caching and reuse
+   - Add statistics collection for better optimization
+   - Implement index selection algorithms
+
+2. **Advanced Indexing**:
+   - Support hash indexes for equality lookups
+   - Implement bitmap indexes for low-cardinality columns
+   - Add full-text search indexes
+   - Support partial and functional indexes
+
+3. **Concurrency Control**:
+   - Implement Multi-Version Concurrency Control (MVCC)
+   - Support different isolation levels (READ UNCOMMITTED, READ COMMITTED, etc.)
+   - Add row-level locking for better concurrency
+   - Implement distributed transactions with 2-phase commit
+
+4. **Advanced SQL Features**:
+   - Support subqueries and correlated queries
+   - Implement window functions (ROW_NUMBER, RANK, etc.)
+   - Add Common Table Expressions (CTEs)
+   - Support UNION, INTERSECT, and EXCEPT operations
+
+5. **Storage Optimizations**:
+   - Implement column-store format for analytical queries
+   - Add data compression to reduce storage size
+   - Support partitioning for large tables
+   - Implement automatic statistics collection
+
+6. **High Availability**:
+   - Add replication support (master-slave, master-master)
+   - Implement automatic failover mechanisms
+   - Support read replicas for scaling read operations
+   - Add backup and restore functionality
+
+7. **Performance Features**:
+   - Implement connection pooling
+   - Add query result caching
+   - Support materialized views
+   - Implement parallel query execution
+
+By building this database system, you'll gain deep understanding of the algorithms and data structures that power modern databases. This knowledge will help you write more efficient queries, design better schemas, and troubleshoot performance issues in production systems.

@@ -1,0 +1,196 @@
+---
+title: Build Your Own find Tool
+summary: Create a command-line tool for searching files and directories with pattern matching and filtering options. Learn about filesystem traversal, pattern matching, and file operations.
+skills:
+- File System Operations
+- Directory Traversal
+- Pattern Matching
+- Command-Line Arguments
+difficulty: Intermediate
+category: Command Line
+estimatedTime: 4-6 hours
+---
+
+This challenge is inspired by the `find` command-line tool in Unix-like systems. The `find` tool is one of the most powerful utilities for locating files and directories in a filesystem hierarchy. By building your own version of `find`, you'll learn about directory traversal, pattern matching, file attribute checking, and complex command-line argument processing.
+
+## Table of Contents
+
+The `find` command is essential for system administration and file management, embodying these Unix principles:
+
+- **Recursion**: Traverse directory trees efficiently to locate files.
+- **Filtering**: Apply multiple criteria to narrow down search results.
+- **Actions**: Execute commands on found files for batch processing.
+- **Flexibility**: Support complex search patterns and conditions.
+
+You can learn more about the original `find` command by reading its manual page:
+
+```bash
+man find
+```
+
+## The Challenge
+
+Your task is to create a command-line tool that searches for files and directories in a directory hierarchy based on various criteria. The tool should support pattern matching, file type filtering, size constraints, and time-based searches.
+
+## Supported Arguments
+
+Your tool should support the following command-line arguments:
+
+### Basic Options:
+- `path` - Starting directory for search (default: current directory)
+- `-name pattern` - Find files matching the given pattern (supports wildcards)
+- `-iname pattern` - Case-insensitive name matching
+- `-type f|d|l` - Find files (f), directories (d), or symbolic links (l)
+- `-size [+|-]N[c|k|M|G]` - Find files by size (c=bytes, k=KB, M=MB, G=GB)
+
+### Advanced Filters:
+- `-maxdepth N` - Limit search to N levels deep
+- `-mindepth N` - Start search at least N levels deep
+- `-empty` - Find empty files and directories
+- `-executable` - Find executable files
+- `-readable` - Find readable files
+- `-writable` - Find writable files
+
+### Time-based:
+- `-newer file` - Find files newer than the reference file
+- `-mtime [+|-]N` - Find files modified N days ago
+- `-ctime [+|-]N` - Find files changed N days ago
+
+### Actions:
+- `-print` - Print the full path (default action)
+- `-ls` - List files in `ls -l` format
+- `-delete` - Delete found files (use with caution)
+- `-exec command {} \;` - Execute command on each found file
+
+## Example Usage
+
+Here's how your tool should work:
+
+```bash
+# Find all files in current directory and subdirectories
+$ find .
+./file1.txt
+./subdir/file2.txt
+./subdir/nested/file3.txt
+
+# Find files by name pattern
+$ find . -name "*.txt"
+./file1.txt
+./subdir/file2.txt
+
+# Case-insensitive search
+$ find . -iname "*.TXT"
+./file1.txt
+./File2.TXT
+
+# Find only directories
+$ find . -type d
+./subdir
+./subdir/nested
+
+# Find files larger than 1MB
+$ find . -size +1M
+./large_file.dat
+
+# Find files smaller than 100KB
+$ find . -size -100k
+./small_file.txt
+
+# Limit search depth
+$ find . -maxdepth 2 -name "*.txt"
+./file1.txt
+./subdir/file2.txt
+
+# Find empty files
+$ find . -type f -empty
+./empty_file.txt
+
+# Find executable files
+$ find . -type f -executable
+./script.sh
+./program
+
+# Find files modified in the last 7 days
+$ find . -mtime -7
+./recent_file.txt
+
+# Execute command on found files
+$ find . -name "*.log" -exec rm {} \;
+
+# List files in ls format
+$ find . -name "*.txt" -ls
+-rw-r--r--  1 user group 1234 Dec 25 10:30 ./file1.txt
+-rw-r--r--  1 user group 5678 Dec 24 15:45 ./subdir/file2.txt
+```
+
+## Implementation Steps
+
+1. **Directory Traversal**:
+   - Implement recursive directory walking
+   - Handle symbolic links appropriately (avoid infinite loops)
+   - Support depth limiting with maxdepth/mindepth
+   - Handle permission errors gracefully
+
+2. **Pattern Matching**:
+   - Implement wildcard pattern matching (* and ?)
+   - Support case-insensitive matching
+   - Handle escaped special characters
+   - Consider using glob patterns or regex
+
+3. **File Attribute Checking**:
+   - Check file types (regular files, directories, symlinks)
+   - Examine file permissions (readable, writable, executable)
+   - Get file size and compare with criteria
+   - Access file modification and creation times
+
+4. **Command-Line Parsing**:
+   - Parse complex command-line arguments with multiple options
+   - Handle option combinations and precedence
+   - Support both short and long option formats where applicable
+   - Validate argument combinations for consistency
+
+5. **Action Execution**:
+   - Implement the default print action
+   - Support detailed listing (ls-style output)
+   - Handle file deletion safely
+   - Execute external commands with proper escaping
+
+## Extra Credit
+
+Extend your `find` implementation with these additional features:
+
+1. **Advanced Pattern Matching**:
+   - Support regular expressions with `-regex` option
+   - Implement `-path` for matching full path patterns
+   - Add `-wholename` as alias for `-path`
+
+2. **Logical Operators**:
+   - Support `-and`, `-or`, and `-not` operators
+   - Implement parentheses for grouping expressions
+   - Handle operator precedence correctly
+
+3. **Additional File Tests**:
+   - `-user username` - Find files owned by specific user
+   - `-group groupname` - Find files owned by specific group
+   - `-perm mode` - Find files with specific permissions
+   - `-links N` - Find files with N hard links
+
+4. **Performance Optimizations**:
+   - Implement early termination for `-quit` action
+   - Add `-prune` to skip directory subtrees
+   - Optimize filesystem operations for large directories
+   - Support parallel processing for multiple directories
+
+5. **Advanced Actions**:
+   - `-ok command {} \;` - Interactive exec (ask before running)
+   - `-execdir command {} \;` - Execute in file's directory
+   - `-printf format` - Custom output formatting
+   - `-fprint file` - Write results to file
+
+6. **Safety Features**:
+   - Implement dry-run mode for destructive operations
+   - Add confirmation prompts for dangerous actions
+   - Support exclude patterns to skip certain files/directories
+   - Validate user input to prevent command injection
+
+This challenge will teach you essential skills in filesystem programming, pattern matching, and building robust command-line tools that handle complex user input and edge cases.

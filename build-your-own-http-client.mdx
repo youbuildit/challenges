@@ -1,0 +1,211 @@
+---
+title: Build Your Own HTTP Client
+summary: Create an HTTP client that handles requests, responses, redirects, cookies, and SSL/TLS. Learn about network protocols, state management, and web standards.
+skills:
+- Network Programming
+- HTTP Protocol
+- SSL/TLS
+- State Management
+difficulty: Intermediate
+category: Networking
+estimatedTime: 5-7 hours
+---
+
+This challenge is inspired by HTTP clients like curl, wget, and libraries such as requests (Python) or fetch (JavaScript). By building your own HTTP client, you'll learn about the HTTP protocol, SSL/TLS encryption, cookie management, and the complexities of modern web communication.
+
+## Table of Contents
+
+Understanding how HTTP clients work is essential for web development and API integration. Key principles include:
+
+- **Protocol Compliance**: Follow HTTP/1.1 and HTTP/2 specifications for reliable communication.
+- **State Management**: Handle cookies, sessions, and authentication across requests.
+- **Security**: Implement SSL/TLS for secure communication and certificate validation.
+- **Robustness**: Handle redirects, timeouts, and various error conditions gracefully.
+
+You can learn more about the HTTP protocol in [RFC 7230](https://tools.ietf.org/html/rfc7230) and related RFCs.
+
+## The Challenge
+
+Your task is to implement an HTTP client that supports:
+
+1. Basic HTTP methods (GET, POST, PUT, DELETE, etc.)
+2. Request and response header handling
+3. Cookie management and persistence
+4. SSL/TLS support for HTTPS
+5. Automatic redirect following
+6. Request/response body handling
+7. Authentication mechanisms
+
+## Supported Features
+
+Your HTTP client implementation should support the following core functionality:
+
+1. **HTTP Methods**:
+   - `GET` - Retrieve data from a server
+   - `POST` - Send data to create/update resources
+   - `PUT` - Update or create resources
+   - `DELETE` - Remove resources
+   - `HEAD` - Get headers without response body
+   - `PATCH` - Partial resource updates
+   - `OPTIONS` - Query available methods
+
+2. **Headers**:
+   - Send custom headers with requests
+   - Parse and access response headers
+   - Handle standard headers (Content-Type, Content-Length, etc.)
+   - Support for compression headers (gzip, deflate)
+
+3. **Request Body**:
+   - Send form data (application/x-www-form-urlencoded)
+   - Send JSON data (application/json)
+   - Send multipart form data for file uploads
+   - Send raw binary data
+
+4. **Response Handling**:
+   - Parse response status codes and messages
+   - Handle different content types
+   - Stream large responses to avoid memory issues
+   - Automatic content decompression
+
+5. **Cookie Management**:
+   - Parse Set-Cookie headers from responses
+   - Store cookies with domain and path restrictions
+   - Send appropriate cookies with requests
+   - Handle cookie expiration and security flags
+
+6. **SSL/TLS Support**:
+   - Establish secure connections for HTTPS
+   - Validate server certificates
+   - Support different TLS versions
+   - Handle certificate errors appropriately
+
+## Example Usage
+
+Here's how your HTTP client should behave:
+
+```python
+# Basic GET request
+response = http_client.get('https://api.example.com/users')
+print(f"Status: {response.status_code}")
+print(f"Headers: {response.headers}")
+print(f"Body: {response.text}")
+
+# POST request with JSON data
+data = {"name": "Alice", "email": "alice@example.com"}
+response = http_client.post(
+    'https://api.example.com/users',
+    json=data,
+    headers={'Authorization': 'Bearer token123'}
+)
+
+# Handle cookies
+client = HTTPClient()
+client.get('https://example.com/login')  # Receives cookies
+client.post('https://example.com/api/data')  # Sends cookies automatically
+
+# File upload
+with open('document.pdf', 'rb') as f:
+    response = client.post(
+        'https://api.example.com/upload',
+        files={'document': f}
+    )
+
+# Custom configuration
+client = HTTPClient(
+    timeout=30,
+    max_redirects=10,
+    verify_ssl=True,
+    user_agent='MyClient/1.0'
+)
+
+# Session management
+session = client.session()
+session.get('https://example.com/login')
+session.post('https://example.com/dashboard')  # Maintains cookies/auth
+```
+
+## Implementation Steps
+
+1. **Socket Programming**:
+   - Implement TCP socket connections
+   - Handle DNS resolution for hostnames
+   - Support both IPv4 and IPv6 connections
+   - Implement connection pooling for efficiency
+
+2. **HTTP Protocol Implementation**:
+   - Build HTTP request messages according to specification
+   - Parse HTTP response messages correctly
+   - Handle chunked transfer encoding
+   - Support HTTP/1.1 persistent connections
+
+3. **SSL/TLS Integration**:
+   - Integrate with SSL/TLS library (OpenSSL, etc.)
+   - Implement certificate validation
+   - Handle SNI (Server Name Indication)
+   - Support various cipher suites and protocols
+
+4. **URL Processing**:
+   - Parse URLs into components (scheme, host, port, path, query, fragment)
+   - Handle URL encoding and decoding
+   - Support relative URL resolution
+   - Validate URL formats
+
+5. **Cookie Management**:
+   - Implement cookie jar for storage
+   - Parse Set-Cookie headers correctly
+   - Apply domain and path matching rules
+   - Handle secure and HttpOnly flags
+
+6. **Redirect Handling**:
+   - Follow 3xx redirect status codes automatically
+   - Prevent infinite redirect loops
+   - Handle different redirect types (301, 302, 303, 307, 308)
+   - Preserve or modify methods as appropriate
+
+## Extra Credit
+
+Extend your HTTP client with the following advanced features:
+
+1. **HTTP/2 Support**:
+   - Implement HTTP/2 binary framing
+   - Support multiplexed streams
+   - Handle server push capabilities
+   - Implement HPACK header compression
+
+2. **Advanced Authentication**:
+   - Support Basic Authentication
+   - Implement Digest Authentication
+   - Add OAuth 1.0 and 2.0 support
+   - Handle NTLM and Kerberos authentication
+
+3. **Caching**:
+   - Implement HTTP caching according to RFC 7234
+   - Handle Cache-Control headers
+   - Support conditional requests (ETag, Last-Modified)
+   - Implement cache validation and freshness
+
+4. **Proxy Support**:
+   - Support HTTP and HTTPS proxies
+   - Implement proxy authentication
+   - Handle SOCKS proxy protocol
+   - Support proxy auto-configuration (PAC)
+
+5. **Advanced Features**:
+   - Implement request/response middleware system
+   - Add retry logic with exponential backoff
+   - Support request cancellation and timeouts
+   - Implement bandwidth throttling
+
+6. **WebSocket Support**:
+   - Upgrade HTTP connections to WebSocket
+   - Handle WebSocket framing protocol
+   - Support ping/pong frames for keep-alive
+   - Implement proper connection lifecycle management
+
+7. **Performance Optimizations**:
+   - Implement connection pooling and reuse
+   - Add request batching capabilities
+   - Support parallel requests
+   - Implement DNS caching
+
+By building this HTTP client, you'll gain deep understanding of web protocols, network programming, and the challenges involved in reliable web communication. This knowledge will help you troubleshoot network issues, optimize API interactions, and build more robust web applications.

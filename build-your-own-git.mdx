@@ -1,0 +1,190 @@
+---
+title: Build Your Own Git
+summary: Implement a distributed version control system with commits, branches, merging, and remote repositories. Learn about file systems, hashing, and distributed systems.
+skills:
+- File Systems
+- Hashing
+- Data Structures
+- Distributed Systems
+difficulty: Advanced
+category: Version Control
+estimatedTime: 10-12 hours
+---
+
+This challenge is inspired by Git, the most widely used version control system in software development. By building your own Git-like system, you'll learn about content-addressable storage, tree structures, distributed systems, and the algorithms that make modern version control possible.
+
+## Table of Contents
+
+Understanding how version control systems work is fundamental to modern software development. Key principles include:
+
+- **Content Addressability**: Use cryptographic hashes to identify and store content uniquely.
+- **Immutability**: Once created, objects never change, ensuring data integrity.
+- **Distributed Architecture**: Enable multiple repositories to sync and collaborate.
+- **Efficiency**: Store only changes between versions to minimize space usage.
+
+You can learn more about Git's internals in the [Pro Git book](https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain).
+
+## The Challenge
+
+Your task is to implement a Git-like version control system that supports:
+
+1. Repository initialization and basic object storage
+2. Staging area (index) management
+3. Commits and commit history
+4. Branching and merging
+5. Remote repository operations
+6. Basic file diff algorithms
+
+## Supported Features
+
+Your Git implementation should support the following core functionality:
+
+1. **Repository Management**:
+   - `init` - Initialize a new repository
+   - `status` - Show working tree status
+   - `log` - Show commit history
+
+2. **Staging and Committing**:
+   - `add <file>` - Add file contents to the staging area
+   - `commit -m <message>` - Record changes to the repository
+   - `reset <file>` - Unstage a file
+   - `diff` - Show changes between commits, commit and working tree, etc.
+
+3. **Branching**:
+   - `branch [name]` - List or create branches
+   - `checkout <branch>` - Switch branches or restore working tree files
+   - `merge <branch>` - Join two or more development histories together
+
+4. **Object Storage**:
+   - Implement blob, tree, and commit objects
+   - Use SHA-1 hashing for content addressing
+   - Store objects in compressed format
+
+5. **Remote Operations**:
+   - `clone <url>` - Clone a repository into a new directory
+   - `push` - Update remote refs along with associated objects
+   - `pull` - Fetch from and integrate with another repository
+
+## Example Usage
+
+Here's how your Git system should behave:
+
+```bash
+# Initialize a new repository
+$ mygit init
+Initialized empty repository in .mygit/
+
+# Add and commit files
+$ echo "Hello World" > README.md
+$ mygit add README.md
+$ mygit status
+Changes to be committed:
+  new file:   README.md
+
+$ mygit commit -m "Initial commit"
+[main 1a2b3c4] Initial commit
+ 1 file changed, 1 insertion(+)
+
+# View commit history
+$ mygit log
+commit 1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t
+Author: Developer <dev@example.com>
+Date: Mon Jan 1 12:00:00 2024
+
+    Initial commit
+
+# Create and switch branches
+$ mygit branch feature
+$ mygit checkout feature
+Switched to branch 'feature'
+
+# Make changes and merge
+$ echo "New feature" >> README.md
+$ mygit add README.md
+$ mygit commit -m "Add new feature"
+$ mygit checkout main
+$ mygit merge feature
+Updating 1a2b3c4..2b3c4d5
+Fast-forward
+ README.md | 1 +
+ 1 file changed, 1 insertion(+)
+```
+
+## Implementation Steps
+
+1. **Object Storage System**:
+   - Implement a content-addressable storage system using SHA-1 hashes
+   - Create blob objects for file content
+   - Create tree objects for directory structures
+   - Create commit objects for snapshots with metadata
+
+2. **Index (Staging Area)**:
+   - Implement an index file to track staged changes
+   - Support adding and removing files from the index
+   - Handle file permissions and timestamps
+
+3. **Working Directory Management**:
+   - Track changes between working directory, index, and repository
+   - Implement status checking to show modified, staged, and untracked files
+   - Handle file restoration from the repository
+
+4. **Commit History**:
+   - Implement commit creation with parent references
+   - Build commit history traversal algorithms
+   - Support commit messages and author information
+
+5. **Branching System**:
+   - Implement references (refs) to track branch heads
+   - Support branch creation, deletion, and switching
+   - Handle HEAD pointer management
+
+6. **Merging Algorithm**:
+   - Implement three-way merge algorithms
+   - Handle merge conflicts and resolution
+   - Support fast-forward merges when possible
+
+7. **Remote Repository Support**:
+   - Implement pack file format for efficient network transfer
+   - Support clone, push, and pull operations
+   - Handle reference updates and synchronization
+
+## Extra Credit
+
+Extend your Git implementation with the following features:
+
+1. **Advanced Diff Algorithms**:
+   - Implement Myers' diff algorithm for better change detection
+   - Add support for word-level and character-level diffs
+   - Implement rename detection
+
+2. **Pack Files**:
+   - Implement pack file format for space-efficient storage
+   - Add delta compression for similar objects
+   - Support pack file indexing and retrieval
+
+3. **Advanced Merging**:
+   - Implement recursive merge strategy for complex histories
+   - Add support for merge strategies (ours, theirs, octopus)
+   - Implement interactive merge conflict resolution
+
+4. **Hooks System**:
+   - Support pre-commit, post-commit, and other hooks
+   - Allow custom scripts to run at various Git operations
+   - Implement hook configuration and management
+
+5. **Submodules**:
+   - Add support for embedding other repositories as submodules
+   - Handle submodule initialization and updates
+   - Support nested submodule operations
+
+6. **Advanced History Operations**:
+   - Implement `rebase` for changing commit history
+   - Add `cherry-pick` for applying specific commits
+   - Support `bisect` for finding problematic commits
+
+7. **Performance Optimizations**:
+   - Implement bitmap indexes for faster operations
+   - Add multi-threading support for parallel operations
+   - Optimize large repository handling
+
+By building this Git clone, you'll gain profound insights into version control systems, distributed computing, and the data structures that power modern software development. This knowledge will help you become a more effective developer and better understand the tools you use daily.

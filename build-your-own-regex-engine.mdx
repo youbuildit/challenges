@@ -1,0 +1,215 @@
+---
+title: Build Your Own Regular Expression Engine
+summary: Create a regex engine that supports pattern matching, character classes, quantifiers, and groups. Learn about finite automata, parsing, and string algorithms.
+skills:
+- Parsing
+- Finite Automata
+- String Algorithms
+- Compiler Theory
+difficulty: Intermediate
+category: Parsing
+estimatedTime: 6-8 hours
+---
+
+This challenge is inspired by regular expression engines found in programming languages and tools like grep, sed, and awk. By building your own regex engine, you'll learn about finite state automata, parsing techniques, and the algorithms that power pattern matching in text processing.
+
+## Table of Contents
+
+Understanding how regular expressions work is crucial for text processing and compiler design. Key principles include:
+
+- **Finite Automata**: Use state machines to recognize patterns efficiently.
+- **Parsing**: Convert regex patterns into executable representations.
+- **Optimization**: Implement efficient matching algorithms for various use cases.
+- **Expressiveness**: Support a rich set of operators for complex pattern matching.
+
+You can learn more about regular expressions and finite automata in books like [Introduction to Automata Theory](https://www.pearson.com/en-us/subject-catalog/p/introduction-to-automata-theory-languages-and-computation/P200000003450) and [Crafting Interpreters](https://craftinginterpreters.com/).
+
+## The Challenge
+
+Your task is to implement a regular expression engine that supports:
+
+1. Basic pattern matching with literal characters
+2. Meta-characters (., *, +, ?, ^, $)
+3. Character classes and ranges ([a-z], [0-9], etc.)
+4. Grouping and capturing with parentheses
+5. Alternation with the pipe operator (|)
+6. Escape sequences for special characters
+7. Efficient matching algorithms
+
+## Supported Features
+
+Your regex engine implementation should support the following core functionality:
+
+1. **Literal Matching**:
+   - Match exact character sequences
+   - Handle escaped special characters (\., \*, etc.)
+   - Support Unicode characters
+
+2. **Meta-characters**:
+   - `.` - Match any single character (except newline)
+   - `*` - Match zero or more of the preceding element
+   - `+` - Match one or more of the preceding element
+   - `?` - Match zero or one of the preceding element
+   - `^` - Match start of string/line
+   - `$` - Match end of string/line
+
+3. **Character Classes**:
+   - `[abc]` - Match any character in the set
+   - `[^abc]` - Match any character not in the set
+   - `[a-z]` - Match any character in the range
+   - `\d` - Match any digit (0-9)
+   - `\w` - Match any word character (a-z, A-Z, 0-9, _)
+   - `\s` - Match any whitespace character
+
+4. **Grouping and Capturing**:
+   - `(pattern)` - Group patterns and capture matches
+   - `(?:pattern)` - Group without capturing
+   - Access captured groups after matching
+
+5. **Alternation**:
+   - `pattern1|pattern2` - Match either pattern1 or pattern2
+   - Support nested alternations
+
+6. **Quantifiers**:
+   - `{n}` - Match exactly n occurrences
+   - `{n,}` - Match n or more occurrences
+   - `{n,m}` - Match between n and m occurrences
+   - Greedy and non-greedy variants
+
+## Example Usage
+
+Here's how your regex engine should behave:
+
+```python
+# Basic matching
+regex = compile_regex("hello")
+assert regex.match("hello world") == True
+assert regex.match("goodbye") == False
+
+# Meta-characters
+regex = compile_regex("h.llo")
+assert regex.match("hello") == True
+assert regex.match("hallo") == True
+assert regex.match("hillo") == True
+
+# Quantifiers
+regex = compile_regex("ab*c")
+assert regex.match("ac") == True      # zero b's
+assert regex.match("abc") == True     # one b
+assert regex.match("abbbc") == True   # multiple b's
+
+regex = compile_regex("ab+c")
+assert regex.match("ac") == False     # requires at least one b
+assert regex.match("abc") == True
+assert regex.match("abbbc") == True
+
+# Character classes
+regex = compile_regex("[0-9]+")
+assert regex.match("123") == True
+assert regex.match("abc") == False
+
+regex = compile_regex("[^0-9]+")
+assert regex.match("abc") == True
+assert regex.match("123") == False
+
+# Anchors
+regex = compile_regex("^hello")
+assert regex.match("hello world") == True
+assert regex.match("say hello") == False
+
+# Grouping and capturing
+regex = compile_regex("(h.llo) (w.rld)")
+match = regex.match("hello world")
+assert match.group(1) == "hello"
+assert match.group(2) == "world"
+
+# Alternation
+regex = compile_regex("cat|dog")
+assert regex.match("cat") == True
+assert regex.match("dog") == True
+assert regex.match("bird") == False
+
+# Complex patterns
+regex = compile_regex(r"(\d{3})-(\d{3})-(\d{4})")
+match = regex.match("123-456-7890")
+assert match.group(1) == "123"
+assert match.group(2) == "456"
+assert match.group(3) == "7890"
+```
+
+## Implementation Steps
+
+1. **Lexical Analysis**:
+   - Tokenize regex patterns into meaningful symbols
+   - Handle escape sequences and special characters
+   - Identify literals, operators, and grouping constructs
+
+2. **Parser Implementation**:
+   - Build a recursive descent parser for regex syntax
+   - Create an Abstract Syntax Tree (AST) representation
+   - Handle operator precedence and associativity
+   - Support error reporting for invalid patterns
+
+3. **NFA Construction**:
+   - Convert the AST into a Non-deterministic Finite Automaton (NFA)
+   - Implement Thompson's construction algorithm
+   - Handle epsilon transitions for complex operators
+   - Support character classes and ranges
+
+4. **Matching Algorithm**:
+   - Implement NFA simulation for pattern matching
+   - Handle backtracking for capturing groups
+   - Support both match() and search() operations
+   - Implement efficient state management
+
+5. **Optimization (Optional)**:
+   - Convert NFA to DFA for better performance
+   - Implement subset construction algorithm
+   - Minimize the resulting DFA
+   - Cache compiled patterns for reuse
+
+## Extra Credit
+
+Extend your regex engine with the following advanced features:
+
+1. **Advanced Quantifiers**:
+   - Non-greedy quantifiers (*?, +?, ??, {n,m}?)
+   - Possessive quantifiers (*+, ++, ?+, {n,m}+)
+   - Support for lazy matching strategies
+
+2. **Advanced Character Classes**:
+   - Unicode character classes (\p{L}, \p{N}, etc.)
+   - POSIX character classes ([:alpha:], [:digit:], etc.)
+   - Custom character class definitions
+
+3. **Lookahead and Lookbehind**:
+   - Positive lookahead (?=pattern)
+   - Negative lookahead (?!pattern)
+   - Positive lookbehind (?<=pattern)
+   - Negative lookbehind (?<!pattern)
+
+4. **Advanced Grouping**:
+   - Named capture groups (?<name>pattern)
+   - Conditional expressions (?(condition)then|else)
+   - Recursive patterns for nested structures
+   - Balancing groups for matching paired constructs
+
+5. **Performance Optimizations**:
+   - Implement Boyer-Moore string search for literal prefixes
+   - Add just-in-time compilation to native code
+   - Implement parallel matching for multiple patterns
+   - Support streaming input for large texts
+
+6. **Extended Features**:
+   - Multi-line mode for ^ and $ anchors
+   - Case-insensitive matching mode
+   - Word boundary assertions (\b, \B)
+   - Support for comments in regex patterns (?#comment)
+
+7. **Advanced Algorithms**:
+   - Implement Aho-Corasick for multiple pattern matching
+   - Support approximate matching with edit distance
+   - Implement regex derivatives for incremental matching
+   - Add support for context-free extensions
+
+By building this regex engine, you'll gain deep understanding of formal languages, automata theory, and the algorithms that power text processing tools. This knowledge will help you write more efficient text processing code, understand compiler design principles, and optimize pattern matching in your applications.

@@ -1,0 +1,253 @@
+---
+title: Build Your Own head & tail Tools
+summary: Create command-line tools for viewing the beginning and end of files. Learn about file I/O, buffering, and efficient text processing.
+skills:
+- File I/O
+- Text Processing
+- Command-Line Arguments
+- Buffering Strategies
+difficulty: Beginner
+category: Command Line
+estimatedTime: 3-4 hours
+---
+
+This challenge is inspired by the `head` and `tail` command-line tools in Unix-like systems. These tools are fundamental for quickly examining file contents, log monitoring, and data sampling. By building your own versions of `head` and `tail`, you'll learn about efficient file I/O, buffering strategies, and handling different text processing scenarios.
+
+## Table of Contents
+
+The `head` and `tail` commands exemplify efficient, focused file processing tools:
+
+- **Efficiency**: Read only the necessary portions of files, even for very large files.
+- **Simplicity**: Provide straightforward functionality for common use cases.
+- **Flexibility**: Support various output formats and processing options.
+- **Monitoring**: Enable real-time file monitoring (especially with `tail -f`).
+
+You can learn more about the original commands by reading their manual pages:
+
+```bash
+man head
+man tail
+```
+
+## The Challenge
+
+Your task is to create two command-line tools:
+
+1. **head** - Display the first part of files
+2. **tail** - Display the last part of files
+
+Both tools should handle multiple files, support various output formats, and work efficiently with large files.
+
+## Supported Arguments
+
+### head Tool Arguments:
+- `-n num` or `--lines=num` - Print the first num lines (default: 10)
+- `-c num` or `--bytes=num` - Print the first num bytes
+- `-q` or `--quiet` - Never print headers giving file names
+- `-v` or `--verbose` - Always print headers giving file names
+
+### tail Tool Arguments:
+- `-n num` or `--lines=num` - Print the last num lines (default: 10)
+- `-c num` or `--bytes=num` - Print the last num bytes
+- `-f` or `--follow` - Output appended data as the file grows
+- `-F` or `--follow=name` - Follow file by name (handle log rotation)
+- `-q` or `--quiet` - Never print headers giving file names
+- `-v` or `--verbose` - Always print headers giving file names
+- `--retry` - Keep trying to open a file even if it's inaccessible
+- `-s num` or `--sleep-interval=num` - Sleep for num seconds between iterations
+
+## Example Usage
+
+Here's how your tools should work:
+
+### head Examples:
+
+```bash
+# Display first 10 lines (default)
+$ head file.txt
+line 1
+line 2
+...
+line 10
+
+# Display first 5 lines
+$ head -n 5 file.txt
+line 1
+line 2
+line 3
+line 4
+line 5
+
+# Display first 100 bytes
+$ head -c 100 file.txt
+This is the beginning of the file with exactly 100 bytes of content displayed here.
+
+# Multiple files with headers
+$ head -n 3 file1.txt file2.txt
+==> file1.txt <==
+line 1 of file1
+line 2 of file1
+line 3 of file1
+
+==> file2.txt <==
+line 1 of file2
+line 2 of file2
+line 3 of file2
+
+# Suppress headers
+$ head -n 3 -q file1.txt file2.txt
+line 1 of file1
+line 2 of file1
+line 3 of file1
+line 1 of file2
+line 2 of file2
+line 3 of file2
+
+# Read from stdin
+$ echo -e "a\nb\nc\nd\ne" | head -n 3
+a
+b
+c
+```
+
+### tail Examples:
+
+```bash
+# Display last 10 lines (default)
+$ tail file.txt
+line 991
+line 992
+...
+line 1000
+
+# Display last 5 lines
+$ tail -n 5 file.txt
+line 996
+line 997
+line 998
+line 999
+line 1000
+
+# Display last 50 bytes
+$ tail -c 50 file.txt
+the end of the file with last 50 bytes shown.
+
+# Follow file for new content (like log monitoring)
+$ tail -f /var/log/system.log
+Dec 25 10:30:15 system: Log entry 1
+Dec 25 10:30:16 system: Log entry 2
+[continues to show new lines as they're added]
+
+# Follow by name (handles log rotation)
+$ tail -F /var/log/rotating.log
+[follows the file even if it gets rotated/recreated]
+
+# Multiple files
+$ tail -n 2 file1.txt file2.txt
+==> file1.txt <==
+second to last line of file1
+last line of file1
+
+==> file2.txt <==
+second to last line of file2
+last line of file2
+
+# Show specific number of lines from end
+$ tail -n +5 file.txt  # Show from line 5 to end
+line 5
+line 6
+...
+line 1000
+```
+
+## Implementation Steps
+
+### For head:
+
+1. **Basic Line Reading**:
+   - Read files line by line until reaching the specified count
+   - Handle the case where files have fewer lines than requested
+   - Implement efficient reading for large files
+   - Support reading from standard input
+
+2. **Byte-based Reading**:
+   - Read specified number of bytes from file beginning
+   - Handle different character encodings properly
+   - Avoid reading entire file into memory
+
+3. **Multiple File Handling**:
+   - Process multiple files with appropriate headers
+   - Handle file access errors gracefully
+   - Support header suppression and forcing
+
+### For tail:
+
+1. **Basic Line Reading**:
+   - Efficiently find the last N lines without reading entire file
+   - Implement reverse reading strategies
+   - Handle files smaller than requested line count
+
+2. **Byte-based Reading**:
+   - Read last N bytes efficiently
+   - Seek from end of file when possible
+   - Handle cases where file is smaller than byte count
+
+3. **File Following (tail -f)**:
+   - Monitor file for changes using appropriate system calls
+   - Implement polling with configurable intervals
+   - Handle file truncation and rotation
+   - Support graceful shutdown on interruption
+
+4. **Advanced Following (tail -F)**:
+   - Monitor file by name rather than file descriptor
+   - Handle file recreation and rotation
+   - Detect when followed file is deleted/replaced
+
+## Extra Credit
+
+Extend your `head` and `tail` implementations with these additional features:
+
+### Enhanced Features:
+1. **Performance Optimizations**:
+   - Implement memory mapping for large files
+   - Use efficient seeking strategies for tail
+   - Optimize buffer sizes for different file types
+   - Add parallel processing for multiple files
+
+2. **Advanced Options**:
+   - Support negative line numbers for head (-n -5 shows all but last 5)
+   - Support positive line numbers for tail (-n +5 shows from line 5 to end)
+   - Add `--max-unchanged-stats` for tail following
+   - Implement `--pid` option to stop when process dies
+
+3. **Enhanced File Following**:
+   - Support following multiple files simultaneously
+   - Add inotify/kqueue support for efficient file monitoring
+   - Implement backoff strategies for busy files
+   - Support following files across network filesystems
+
+4. **Output Formatting**:
+   - Add timestamp prefixes for followed output
+   - Support custom header formats
+   - Implement colorized output for different files
+   - Add line numbering options
+
+5. **Error Handling**:
+   - Gracefully handle permission errors
+   - Support retrying for temporarily unavailable files
+   - Handle interrupted system calls properly
+   - Provide detailed error messages
+
+6. **Binary File Support**:
+   - Detect and handle binary files appropriately
+   - Support hexadecimal output for binary content
+   - Add options to force text interpretation
+   - Handle mixed binary/text content
+
+7. **Advanced File Operations**:
+   - Support compressed file reading (gzip, bzip2)
+   - Handle different line ending formats (Unix, Windows, Mac)
+   - Support seeking in streams when possible
+   - Add support for named pipes and special files
+
+This challenge will teach you essential file I/O techniques, efficient data processing strategies, and system programming concepts that are fundamental to many other command-line utilities.

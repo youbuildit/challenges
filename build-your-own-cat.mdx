@@ -1,0 +1,151 @@
+---
+title: Build Your Own cat Tool
+summary: Create a command-line tool that displays file contents with various formatting options. Learn about file I/O, text processing, and command-line arguments.
+skills:
+- File I/O
+- Text Processing
+- Command-Line Arguments
+- Error Handling
+difficulty: Beginner
+category: Command Line
+estimatedTime: 2-3 hours
+---
+
+This challenge is inspired by the `cat` command-line tool in Unix-like systems. The `cat` tool is one of the most fundamental Unix utilities, used to display file contents, concatenate files, and perform basic text processing. By building your own version of `cat`, you'll learn about file I/O, command-line argument parsing, and text processing fundamentals.
+
+## Table of Contents
+
+The `cat` command exemplifies the Unix philosophy of building small, focused tools that do one thing well:
+
+- **Simplicity**: Read files and output their contents with minimal complexity.
+- **Composability**: Work well with pipes and other Unix tools for complex workflows.
+- **Flexibility**: Support various options for different use cases.
+
+You can learn more about the original `cat` command by reading its manual page:
+
+```bash
+man cat
+```
+
+## The Challenge
+
+Your task is to create a command-line tool that reads one or more files and outputs their contents to standard output. The tool should handle various options for formatting and display, similar to the standard `cat` command.
+
+## Supported Arguments
+
+Your tool should support the following command-line arguments:
+
+- `-n` or `--number`: Number all output lines starting from 1
+- `-b` or `--number-nonblank`: Number only non-empty lines starting from 1
+- `-s` or `--squeeze-blank`: Suppress repeated empty lines (show only one)
+- `-E` or `--show-ends`: Display `$` at the end of each line
+- `-T` or `--show-tabs`: Display TAB characters as `^I`
+- `-A` or `--show-all`: Equivalent to `-vET` (show all non-printing characters)
+- `-v` or `--show-nonprinting`: Display non-printing characters (except tabs and newlines)
+
+When no files are specified, the tool should read from standard input.
+
+## Example Usage
+
+Here's how your tool should work:
+
+```bash
+# Display a single file
+$ cat file.txt
+Hello World
+This is a test file.
+
+# Display multiple files (concatenate)
+$ cat file1.txt file2.txt
+Contents of file1
+Contents of file2
+
+# Number all lines
+$ cat -n file.txt
+     1	Hello World
+     2	This is a test file.
+     3	
+
+# Number only non-blank lines
+$ cat -b file.txt
+     1	Hello World
+     2	This is a test file.
+
+# Show line endings
+$ cat -E file.txt
+Hello World$
+This is a test file.$
+$
+
+# Show tabs as ^I
+$ cat -T file.txt
+Hello	World	becomes	Hello^IWorld
+
+# Squeeze multiple blank lines into one
+$ cat -s file.txt
+Line 1
+
+Line 3 (blank line above was preserved)
+
+# Read from standard input
+$ echo "Hello from stdin" | cat -n
+     1	Hello from stdin
+
+# Handle non-existent files gracefully
+$ cat nonexistent.txt
+cat: nonexistent.txt: No such file or directory
+```
+
+## Implementation Steps
+
+1. **Command-Line Argument Parsing**:
+   - Parse command-line options using your language's argument parsing library
+   - Handle both short (`-n`) and long (`--number`) option formats
+   - Support combining multiple short options (e.g., `-nE`)
+
+2. **File Input Handling**:
+   - Open and read files specified as arguments
+   - Handle cases where no files are specified (read from stdin)
+   - Implement proper error handling for file access issues
+
+3. **Text Processing**:
+   - Process text line by line for memory efficiency
+   - Implement line numbering with proper formatting
+   - Handle blank line detection and suppression
+   - Implement character display options (tabs, line endings, non-printing)
+
+4. **Output Formatting**:
+   - Format line numbers with consistent width and alignment
+   - Handle special character display according to options
+   - Ensure proper newline handling
+
+## Extra Credit
+
+Extend your `cat` implementation with these additional features:
+
+1. **Advanced Options**:
+   - `-u` (unbuffered output) for real-time display
+   - `--help` to display usage information
+   - `--version` to show version information
+
+2. **Performance Optimization**:
+   - Implement buffered reading for large files
+   - Optimize memory usage for very large files
+   - Add benchmarking to compare with system `cat`
+
+3. **Enhanced Character Display**:
+   - Implement full non-printing character visualization
+   - Support for different character encodings (UTF-8, ASCII, etc.)
+   - Add color output for different character types
+
+4. **Advanced Features**:
+   - Support for binary file detection and handling
+   - Add line range selection (e.g., lines 10-20)
+   - Implement reverse output option (display lines in reverse order)
+
+5. **Error Handling**:
+   - Provide detailed error messages for different failure modes
+   - Handle permission errors gracefully
+   - Support for partially readable files
+
+This challenge will give you a solid foundation in file I/O operations, command-line tool development, and text processing—skills that are fundamental to many other CLI utilities.

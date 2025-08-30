@@ -1,0 +1,165 @@
+---
+title: Build Your Own Redis
+summary: Create an in-memory data store with key-value operations, persistence, and networking. Learn about data structures, network protocols, and database internals.
+skills:
+- Data Structures
+- Network Programming
+- Database Systems
+- Concurrency
+difficulty: Intermediate
+category: Database
+estimatedTime: 6-8 hours
+---
+
+This challenge is inspired by Redis, one of the most popular in-memory data stores used for caching, session management, and real-time applications. By building your own Redis-like server, you'll learn about data structures, network protocols, persistence mechanisms, and how modern databases handle concurrent operations.
+
+## Table of Contents
+
+Understanding how in-memory data stores work is crucial for building high-performance applications. Key principles include:
+
+- **Speed**: Keep data in memory for fast access and operations.
+- **Simplicity**: Use simple, well-defined commands and data structures.
+- **Persistence**: Optionally save data to disk to survive server restarts.
+- **Concurrency**: Handle multiple client connections simultaneously.
+
+You can learn more about Redis and its architecture in the [Redis documentation](https://redis.io/documentation).
+
+## The Challenge
+
+Your task is to implement a Redis-like in-memory data store that supports:
+
+1. Basic key-value operations (GET, SET, DEL)
+2. Data type operations for strings, lists, and sets
+3. Network communication using the Redis Serialization Protocol (RESP)
+4. Optional persistence to disk
+5. Concurrent client handling
+
+## Supported Features
+
+Your Redis implementation should support the following core functionality:
+
+1. **String Operations**:
+   - `SET key value` - Set a key to a string value
+   - `GET key` - Get the value of a key
+   - `DEL key [key ...]` - Delete one or more keys
+   - `EXISTS key [key ...]` - Check if keys exist
+   - `INCR key` - Increment a number stored at key
+   - `DECR key` - Decrement a number stored at key
+
+2. **List Operations**:
+   - `LPUSH key element [element ...]` - Push elements to the left of a list
+   - `RPUSH key element [element ...]` - Push elements to the right of a list
+   - `LPOP key` - Remove and return the leftmost element
+   - `RPOP key` - Remove and return the rightmost element
+   - `LLEN key` - Get the length of a list
+
+3. **Set Operations**:
+   - `SADD key member [member ...]` - Add members to a set
+   - `SREM key member [member ...]` - Remove members from a set
+   - `SISMEMBER key member` - Check if a member exists in a set
+   - `SMEMBERS key` - Get all members of a set
+   - `SCARD key` - Get the number of members in a set
+
+4. **Server Operations**:
+   - `PING [message]` - Ping the server
+   - `FLUSHALL` - Clear all keys from all databases
+   - `SAVE` - Synchronously save data to disk
+
+## Example Usage
+
+Here's how your Redis server should behave:
+
+```bash
+# Start the server
+$ myredis --port 6379
+Redis server started on port 6379
+
+# Connect with a client (like telnet or your own client)
+$ telnet localhost 6379
+
+# Basic string operations
+> SET mykey "Hello World"
++OK
+> GET mykey
+$11
+Hello World
+> DEL mykey
+:1
+> GET mykey
+$-1
+
+# List operations
+> LPUSH mylist "world"
+:1
+> LPUSH mylist "hello"
+:2
+> LLEN mylist
+:2
+> RPOP mylist
+$5
+world
+
+# Set operations
+> SADD myset "one" "two" "three"
+:3
+> SISMEMBER myset "two"
+:1
+> SCARD myset
+:3
+```
+
+## Implementation Steps
+
+1. **Data Storage**:
+   - Design in-memory data structures to store different types (strings, lists, sets)
+   - Implement a hash table for fast key lookups
+   - Handle type checking and conversions
+
+2. **RESP Protocol**:
+   - Implement the Redis Serialization Protocol for client-server communication
+   - Parse incoming commands and format responses correctly
+   - Handle different RESP data types (simple strings, bulk strings, integers, arrays, errors)
+
+3. **Command Processing**:
+   - Create a command dispatcher to route commands to appropriate handlers
+   - Implement error handling for invalid commands and type mismatches
+   - Add support for command aliases and case-insensitivity
+
+4. **Networking**:
+   - Create a TCP server to accept client connections
+   - Handle multiple concurrent clients using threads or async I/O
+   - Implement proper connection management and cleanup
+
+5. **Persistence** (Optional):
+   - Implement RDB-style snapshots to save data to disk
+   - Add AOF (Append Only File) logging for durability
+   - Handle loading data on server startup
+
+## Extra Credit
+
+Extend your Redis implementation with the following features:
+
+1. **Expiration**:
+   - Add `EXPIRE key seconds` and `TTL key` commands
+   - Implement background expiration of keys
+
+2. **Hash Operations**:
+   - Support hash data type with `HSET`, `HGET`, `HDEL`, `HKEYS`, `HVALS` commands
+
+3. **Sorted Sets**:
+   - Implement sorted sets with `ZADD`, `ZRANGE`, `ZRANK` commands
+   - Use skip lists or balanced trees for efficient range queries
+
+4. **Pub/Sub**:
+   - Add `PUBLISH`, `SUBSCRIBE`, and `UNSUBSCRIBE` commands
+   - Implement message broadcasting to subscribed clients
+
+5. **Transactions**:
+   - Support `MULTI`, `EXEC`, `DISCARD` commands for atomic operations
+   - Implement optimistic locking with `WATCH` command
+
+6. **Clustering** (Advanced):
+   - Implement basic sharding across multiple nodes
+   - Add support for data replication and failover
+
+By building this Redis clone, you'll gain deep insights into database internals, network programming, and the design decisions that make Redis so fast and reliable. This knowledge will be invaluable when optimizing applications that use caching and in-memory data stores.
