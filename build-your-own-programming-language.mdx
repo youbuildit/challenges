@@ -1,0 +1,771 @@
+---
+title: Build Your Own Programming Language
+summary: Create a complete programming language with lexer, parser, and interpreter. Learn about language design, compilation theory, and runtime systems.
+skills:
+- Compiler Design
+- Language Theory
+- Abstract Syntax Trees
+- Interpreter Implementation
+difficulty: Advanced
+category: Compilers
+estimatedTime: 12-15 hours
+---
+
+This challenge is inspired by programming language designers and compiler engineers who create the tools we use every day. Building a programming language from scratch involves lexical analysis, parsing, semantic analysis, and code generation or interpretation. By creating your own language, you'll understand the fundamental concepts behind programming languages and gain appreciation for the complexity involved in language implementation.
+
+## Table of Contents
+
+Programming language implementation demonstrates several important computer science concepts:
+
+- **Lexical Analysis**: Convert source code into tokens for parsing.
+- **Syntax Analysis**: Build Abstract Syntax Trees (ASTs) from token streams.
+- **Semantic Analysis**: Type checking, scope resolution, and error detection.
+- **Code Generation**: Transform ASTs into executable code or interpret directly.
+
+Understanding language implementation will make you a better programmer and help you design better APIs and domain-specific languages.
+
+## The Challenge
+
+Your task is to design and implement a complete programming language with its own syntax, semantics, and runtime system. The language should support basic programming constructs and be capable of running non-trivial programs.
+
+## Language Features
+
+Your programming language should support:
+
+1. **Data Types**:
+   - Numbers (integers and floats)
+   - Strings with escape sequences
+   - Booleans (true/false)
+   - Arrays and objects/dictionaries
+
+2. **Variables and Scope**:
+   - Variable declaration and assignment
+   - Lexical scoping (block scope)
+   - Global and local variables
+
+3. **Control Flow**:
+   - Conditional statements (if/else)
+   - Loops (for, while)
+   - Function calls and returns
+   - Break and continue statements
+
+4. **Functions**:
+   - Function definition and invocation
+   - Parameters and return values
+   - Closures and higher-order functions
+   - Recursive function calls
+
+5. **Operators**:
+   - Arithmetic (+, -, *, /, %)
+   - Comparison (==, !=, <, >, <=, >=)
+   - Logical (and, or, not)
+   - Assignment (=)
+
+## Example Language Syntax
+
+Here's what your programming language might look like:
+
+```javascript
+// Variables and basic operations
+let x = 10;
+let y = 20;
+let name = "MyLanguage";
+
+print("Hello from " + name + "!");
+
+// Functions
+function fibonacci(n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+print("Fibonacci of 10: " + fibonacci(10));
+
+// Arrays
+let numbers = [1, 2, 3, 4, 5];
+for (let i = 0; i < length(numbers); i++) {
+    print("Number: " + numbers[i]);
+}
+
+// Objects
+let person = {
+    name: "Alice",
+    age: 25,
+    greet: function() {
+        return "Hello, my name is " + this.name;
+    }
+};
+
+print(person.greet());
+
+// Control flow
+function findMax(arr) {
+    if (length(arr) == 0) {
+        return null;
+    }
+    
+    let max = arr[0];
+    for (let i = 1; i < length(arr); i++) {
+        if (arr[i] > max) {
+            max = arr[i];
+        }
+    }
+    return max;
+}
+
+let testArray = [3, 7, 2, 9, 1, 5];
+print("Maximum: " + findMax(testArray));
+
+// Closures
+function makeCounter() {
+    let count = 0;
+    return function() {
+        count = count + 1;
+        return count;
+    };
+}
+
+let counter = makeCounter();
+print(counter()); // 1
+print(counter()); // 2
+print(counter()); // 3
+```
+
+## Implementation Architecture
+
+```python
+from enum import Enum
+from typing import List, Dict, Any, Optional, Union
+import re
+
+# Token types for lexical analysis
+class TokenType(Enum):
+    # Literals
+    NUMBER = "NUMBER"
+    STRING = "STRING"
+    BOOLEAN = "BOOLEAN"
+    IDENTIFIER = "IDENTIFIER"
+    
+    # Keywords
+    LET = "LET"
+    FUNCTION = "FUNCTION"
+    IF = "IF"
+    ELSE = "ELSE"
+    FOR = "FOR"
+    WHILE = "WHILE"
+    RETURN = "RETURN"
+    BREAK = "BREAK"
+    CONTINUE = "CONTINUE"
+    
+    # Operators
+    PLUS = "PLUS"
+    MINUS = "MINUS"
+    MULTIPLY = "MULTIPLY"
+    DIVIDE = "DIVIDE"
+    MODULO = "MODULO"
+    ASSIGN = "ASSIGN"
+    EQUAL = "EQUAL"
+    NOT_EQUAL = "NOT_EQUAL"
+    LESS = "LESS"
+    GREATER = "GREATER"
+    LESS_EQUAL = "LESS_EQUAL"
+    GREATER_EQUAL = "GREATER_EQUAL"
+    AND = "AND"
+    OR = "OR"
+    NOT = "NOT"
+    
+    # Punctuation
+    LEFT_PAREN = "LEFT_PAREN"
+    RIGHT_PAREN = "RIGHT_PAREN"
+    LEFT_BRACE = "LEFT_BRACE"
+    RIGHT_BRACE = "RIGHT_BRACE"
+    LEFT_BRACKET = "LEFT_BRACKET"
+    RIGHT_BRACKET = "RIGHT_BRACKET"
+    COMMA = "COMMA"
+    SEMICOLON = "SEMICOLON"
+    DOT = "DOT"
+    COLON = "COLON"
+    
+    # Special
+    NEWLINE = "NEWLINE"
+    EOF = "EOF"
+
+class Token:
+    def __init__(self, type: TokenType, value: Any, line: int, column: int):
+        self.type = type
+        self.value = value
+        self.line = line
+        self.column = column
+    
+    def __repr__(self):
+        return f"Token({self.type}, {self.value}, {self.line}:{self.column})"
+
+class Lexer:
+    def __init__(self, source: str):
+        self.source = source
+        self.position = 0
+        self.line = 1
+        self.column = 1
+        self.tokens = []
+        
+        self.keywords = {
+            'let': TokenType.LET,
+            'function': TokenType.FUNCTION,
+            'if': TokenType.IF,
+            'else': TokenType.ELSE,
+            'for': TokenType.FOR,
+            'while': TokenType.WHILE,
+            'return': TokenType.RETURN,
+            'break': TokenType.BREAK,
+            'continue': TokenType.CONTINUE,
+            'true': TokenType.BOOLEAN,
+            'false': TokenType.BOOLEAN,
+            'and': TokenType.AND,
+            'or': TokenType.OR,
+            'not': TokenType.NOT
+        }
+    
+    def error(self, message: str):
+        raise Exception(f"Lexer error at {self.line}:{self.column}: {message}")
+    
+    def current_char(self) -> Optional[str]:
+        if self.position >= len(self.source):
+            return None
+        return self.source[self.position]
+    
+    def peek_char(self, offset: int = 1) -> Optional[str]:
+        peek_pos = self.position + offset
+        if peek_pos >= len(self.source):
+            return None
+        return self.source[peek_pos]
+    
+    def advance(self):
+        if self.position < len(self.source):
+            if self.source[self.position] == '\n':
+                self.line += 1
+                self.column = 1
+            else:
+                self.column += 1
+            self.position += 1
+    
+    def skip_whitespace(self):
+        while self.current_char() and self.current_char().isspace() and self.current_char() != '\n':
+            self.advance()
+    
+    def read_number(self):
+        start_pos = self.position
+        has_decimal = False
+        
+        while self.current_char() and (self.current_char().isdigit() or self.current_char() == '.'):
+            if self.current_char() == '.':
+                if has_decimal:
+                    break
+                has_decimal = True
+            self.advance()
+        
+        value = self.source[start_pos:self.position]
+        return float(value) if has_decimal else int(value)
+    
+    def read_string(self):
+        quote_char = self.current_char()
+        self.advance()  # Skip opening quote
+        
+        value = ""
+        while self.current_char() and self.current_char() != quote_char:
+            if self.current_char() == '\\':
+                self.advance()
+                escape_char = self.current_char()
+                if escape_char == 'n':
+                    value += '\n'
+                elif escape_char == 't':
+                    value += '\t'
+                elif escape_char == 'r':
+                    value += '\r'
+                elif escape_char == '\\':
+                    value += '\\'
+                elif escape_char == quote_char:
+                    value += quote_char
+                else:
+                    value += escape_char
+            else:
+                value += self.current_char()
+            self.advance()
+        
+        if self.current_char() != quote_char:
+            self.error("Unterminated string")
+        
+        self.advance()  # Skip closing quote
+        return value
+    
+    def read_identifier(self):
+        start_pos = self.position
+        
+        while (self.current_char() and 
+               (self.current_char().isalnum() or self.current_char() == '_')):
+            self.advance()
+        
+        return self.source[start_pos:self.position]
+    
+    def tokenize(self) -> List[Token]:
+        while self.current_char():
+            self.skip_whitespace()
+            
+            if not self.current_char():
+                break
+            
+            char = self.current_char()
+            line, column = self.line, self.column
+            
+            # Comments
+            if char == '/' and self.peek_char() == '/':
+                while self.current_char() and self.current_char() != '\n':
+                    self.advance()
+                continue
+            
+            # Numbers
+            if char.isdigit():
+                value = self.read_number()
+                self.tokens.append(Token(TokenType.NUMBER, value, line, column))
+            
+            # Strings
+            elif char in ['"', "'"]:
+                value = self.read_string()
+                self.tokens.append(Token(TokenType.STRING, value, line, column))
+            
+            # Identifiers and keywords
+            elif char.isalpha() or char == '_':
+                value = self.read_identifier()
+                token_type = self.keywords.get(value, TokenType.IDENTIFIER)
+                if token_type == TokenType.BOOLEAN:
+                    value = value == 'true'
+                self.tokens.append(Token(token_type, value, line, column))
+            
+            # Two-character operators
+            elif char == '=' and self.peek_char() == '=':
+                self.advance()
+                self.advance()
+                self.tokens.append(Token(TokenType.EQUAL, '==', line, column))
+            elif char == '!' and self.peek_char() == '=':
+                self.advance()
+                self.advance()
+                self.tokens.append(Token(TokenType.NOT_EQUAL, '!=', line, column))
+            elif char == '<' and self.peek_char() == '=':
+                self.advance()
+                self.advance()
+                self.tokens.append(Token(TokenType.LESS_EQUAL, '<=', line, column))
+            elif char == '>' and self.peek_char() == '=':
+                self.advance()
+                self.advance()
+                self.tokens.append(Token(TokenType.GREATER_EQUAL, '>=', line, column))
+            
+            # Single-character tokens
+            elif char == '+':
+                self.tokens.append(Token(TokenType.PLUS, '+', line, column))
+                self.advance()
+            elif char == '-':
+                self.tokens.append(Token(TokenType.MINUS, '-', line, column))
+                self.advance()
+            elif char == '*':
+                self.tokens.append(Token(TokenType.MULTIPLY, '*', line, column))
+                self.advance()
+            elif char == '/':
+                self.tokens.append(Token(TokenType.DIVIDE, '/', line, column))
+                self.advance()
+            elif char == '%':
+                self.tokens.append(Token(TokenType.MODULO, '%', line, column))
+                self.advance()
+            elif char == '=':
+                self.tokens.append(Token(TokenType.ASSIGN, '=', line, column))
+                self.advance()
+            elif char == '<':
+                self.tokens.append(Token(TokenType.LESS, '<', line, column))
+                self.advance()
+            elif char == '>':
+                self.tokens.append(Token(TokenType.GREATER, '>', line, column))
+                self.advance()
+            elif char == '(':
+                self.tokens.append(Token(TokenType.LEFT_PAREN, '(', line, column))
+                self.advance()
+            elif char == ')':
+                self.tokens.append(Token(TokenType.RIGHT_PAREN, ')', line, column))
+                self.advance()
+            elif char == '{':
+                self.tokens.append(Token(TokenType.LEFT_BRACE, '{', line, column))
+                self.advance()
+            elif char == '}':
+                self.tokens.append(Token(TokenType.RIGHT_BRACE, '}', line, column))
+                self.advance()
+            elif char == '[':
+                self.tokens.append(Token(TokenType.LEFT_BRACKET, '[', line, column))
+                self.advance()
+            elif char == ']':
+                self.tokens.append(Token(TokenType.RIGHT_BRACKET, ']', line, column))
+                self.advance()
+            elif char == ',':
+                self.tokens.append(Token(TokenType.COMMA, ',', line, column))
+                self.advance()
+            elif char == ';':
+                self.tokens.append(Token(TokenType.SEMICOLON, ';', line, column))
+                self.advance()
+            elif char == '.':
+                self.tokens.append(Token(TokenType.DOT, '.', line, column))
+                self.advance()
+            elif char == ':':
+                self.tokens.append(Token(TokenType.COLON, ':', line, column))
+                self.advance()
+            elif char == '\n':
+                self.tokens.append(Token(TokenType.NEWLINE, '\n', line, column))
+                self.advance()
+            else:
+                self.error(f"Unexpected character: {char}")
+        
+        self.tokens.append(Token(TokenType.EOF, None, self.line, self.column))
+        return self.tokens
+```
+
+## AST Node Definitions
+
+```python
+class ASTNode:
+    pass
+
+class Program(ASTNode):
+    def __init__(self, statements: List[ASTNode]):
+        self.statements = statements
+
+class VariableDeclaration(ASTNode):
+    def __init__(self, name: str, initializer: Optional[ASTNode] = None):
+        self.name = name
+        self.initializer = initializer
+
+class FunctionDeclaration(ASTNode):
+    def __init__(self, name: str, parameters: List[str], body: List[ASTNode]):
+        self.name = name
+        self.parameters = parameters
+        self.body = body
+
+class IfStatement(ASTNode):
+    def __init__(self, condition: ASTNode, then_branch: ASTNode, else_branch: Optional[ASTNode] = None):
+        self.condition = condition
+        self.then_branch = then_branch
+        self.else_branch = else_branch
+
+class WhileStatement(ASTNode):
+    def __init__(self, condition: ASTNode, body: ASTNode):
+        self.condition = condition
+        self.body = body
+
+class ForStatement(ASTNode):
+    def __init__(self, initializer: ASTNode, condition: ASTNode, update: ASTNode, body: ASTNode):
+        self.initializer = initializer
+        self.condition = condition
+        self.update = update
+        self.body = body
+
+class ReturnStatement(ASTNode):
+    def __init__(self, value: Optional[ASTNode] = None):
+        self.value = value
+
+class BlockStatement(ASTNode):
+    def __init__(self, statements: List[ASTNode]):
+        self.statements = statements
+
+class ExpressionStatement(ASTNode):
+    def __init__(self, expression: ASTNode):
+        self.expression = expression
+
+class BinaryExpression(ASTNode):
+    def __init__(self, left: ASTNode, operator: Token, right: ASTNode):
+        self.left = left
+        self.operator = operator
+        self.right = right
+
+class UnaryExpression(ASTNode):
+    def __init__(self, operator: Token, operand: ASTNode):
+        self.operator = operator
+        self.operand = operand
+
+class CallExpression(ASTNode):
+    def __init__(self, callee: ASTNode, arguments: List[ASTNode]):
+        self.callee = callee
+        self.arguments = arguments
+
+class MemberExpression(ASTNode):
+    def __init__(self, object: ASTNode, property: ASTNode, computed: bool = False):
+        self.object = object
+        self.property = property
+        self.computed = computed
+
+class AssignmentExpression(ASTNode):
+    def __init__(self, left: ASTNode, right: ASTNode):
+        self.left = left
+        self.right = right
+
+class Identifier(ASTNode):
+    def __init__(self, name: str):
+        self.name = name
+
+class Literal(ASTNode):
+    def __init__(self, value: Any):
+        self.value = value
+
+class ArrayLiteral(ASTNode):
+    def __init__(self, elements: List[ASTNode]):
+        self.elements = elements
+
+class ObjectLiteral(ASTNode):
+    def __init__(self, properties: List[tuple]):  # [(key, value), ...]
+        self.properties = properties
+```
+
+## Implementation Steps
+
+1. **Lexical Analysis**:
+   - Design token types for your language
+   - Implement tokenizer that converts source code to token stream
+   - Handle string literals, numbers, identifiers, and operators
+   - Add support for comments and whitespace handling
+
+2. **Syntax Analysis**:
+   - Design AST node types for language constructs
+   - Implement recursive descent parser
+   - Handle operator precedence and associativity
+   - Add error recovery and reporting
+
+3. **Semantic Analysis**:
+   - Implement symbol table for variable and function tracking
+   - Add scope management (global, function, block scopes)
+   - Perform type checking and semantic validation
+   - Handle forward declarations and closures
+
+4. **Interpreter Implementation**:
+   - Create runtime environment for variable storage
+   - Implement AST visitor pattern for execution
+   - Handle function calls and returns
+   - Add built-in functions and standard library
+
+5. **Error Handling**:
+   - Provide meaningful error messages with line numbers
+   - Handle runtime errors gracefully
+   - Add stack trace for debugging
+   - Support for syntax error recovery
+
+## Runtime Environment
+
+```python
+class Environment:
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.variables = {}
+    
+    def define(self, name: str, value: Any):
+        self.variables[name] = value
+    
+    def get(self, name: str):
+        if name in self.variables:
+            return self.variables[name]
+        if self.parent:
+            return self.parent.get(name)
+        raise NameError(f"Undefined variable: {name}")
+    
+    def set(self, name: str, value: Any):
+        if name in self.variables:
+            self.variables[name] = value
+            return
+        if self.parent:
+            self.parent.set(name, value)
+            return
+        raise NameError(f"Undefined variable: {name}")
+
+class Function:
+    def __init__(self, declaration: FunctionDeclaration, closure: Environment):
+        self.declaration = declaration
+        self.closure = closure
+    
+    def call(self, interpreter, arguments: List[Any]):
+        # Create new environment for function execution
+        environment = Environment(self.closure)
+        
+        # Bind parameters
+        for i, param in enumerate(self.declaration.parameters):
+            value = arguments[i] if i < len(arguments) else None
+            environment.define(param, value)
+        
+        try:
+            interpreter.execute_block(self.declaration.body, environment)
+        except ReturnException as ret:
+            return ret.value
+        
+        return None
+
+class ReturnException(Exception):
+    def __init__(self, value):
+        self.value = value
+
+class Interpreter:
+    def __init__(self):
+        self.globals = Environment()
+        self.environment = self.globals
+        
+        # Add built-in functions
+        self.globals.define("print", self.builtin_print)
+        self.globals.define("length", self.builtin_length)
+    
+    def builtin_print(self, *args):
+        print(*[self.stringify(arg) for arg in args])
+        return None
+    
+    def builtin_length(self, obj):
+        if isinstance(obj, (list, str)):
+            return len(obj)
+        return 0
+    
+    def stringify(self, obj):
+        if obj is None:
+            return "null"
+        if isinstance(obj, bool):
+            return "true" if obj else "false"
+        return str(obj)
+    
+    def execute(self, statements):
+        for statement in statements:
+            self.execute_statement(statement)
+    
+    def execute_statement(self, stmt):
+        if isinstance(stmt, VariableDeclaration):
+            value = None
+            if stmt.initializer:
+                value = self.evaluate(stmt.initializer)
+            self.environment.define(stmt.name, value)
+        
+        elif isinstance(stmt, FunctionDeclaration):
+            function = Function(stmt, self.environment)
+            self.environment.define(stmt.name, function)
+        
+        elif isinstance(stmt, IfStatement):
+            condition = self.evaluate(stmt.condition)
+            if self.is_truthy(condition):
+                self.execute_statement(stmt.then_branch)
+            elif stmt.else_branch:
+                self.execute_statement(stmt.else_branch)
+        
+        elif isinstance(stmt, WhileStatement):
+            while self.is_truthy(self.evaluate(stmt.condition)):
+                self.execute_statement(stmt.body)
+        
+        elif isinstance(stmt, ReturnStatement):
+            value = None
+            if stmt.value:
+                value = self.evaluate(stmt.value)
+            raise ReturnException(value)
+        
+        elif isinstance(stmt, BlockStatement):
+            self.execute_block(stmt.statements, Environment(self.environment))
+        
+        elif isinstance(stmt, ExpressionStatement):
+            self.evaluate(stmt.expression)
+    
+    def execute_block(self, statements, environment):
+        previous = self.environment
+        try:
+            self.environment = environment
+            for statement in statements:
+                self.execute_statement(statement)
+        finally:
+            self.environment = previous
+    
+    def evaluate(self, expr):
+        if isinstance(expr, Literal):
+            return expr.value
+        
+        elif isinstance(expr, Identifier):
+            return self.environment.get(expr.name)
+        
+        elif isinstance(expr, BinaryExpression):
+            left = self.evaluate(expr.left)
+            right = self.evaluate(expr.right)
+            return self.evaluate_binary(left, expr.operator, right)
+        
+        elif isinstance(expr, CallExpression):
+            callee = self.evaluate(expr.callee)
+            arguments = [self.evaluate(arg) for arg in expr.arguments]
+            
+            if callable(callee):
+                return callee(*arguments)
+            elif isinstance(callee, Function):
+                return callee.call(self, arguments)
+            else:
+                raise TypeError("Can only call functions")
+        
+        # ... other expression types
+    
+    def evaluate_binary(self, left, operator, right):
+        if operator.type == TokenType.PLUS:
+            return left + right
+        elif operator.type == TokenType.MINUS:
+            return left - right
+        elif operator.type == TokenType.MULTIPLY:
+            return left * right
+        elif operator.type == TokenType.DIVIDE:
+            return left / right
+        elif operator.type == TokenType.EQUAL:
+            return left == right
+        elif operator.type == TokenType.NOT_EQUAL:
+            return left != right
+        elif operator.type == TokenType.LESS:
+            return left < right
+        elif operator.type == TokenType.GREATER:
+            return left > right
+        # ... other operators
+    
+    def is_truthy(self, obj):
+        if obj is None:
+            return False
+        if isinstance(obj, bool):
+            return obj
+        return True
+```
+
+## Extra Credit
+
+Extend your programming language with these additional features:
+
+1. **Advanced Language Features**:
+   - Classes and object-oriented programming
+   - Inheritance and polymorphism
+   - Modules and import system
+   - Exception handling (try/catch/finally)
+
+2. **Type System**:
+   - Static type checking
+   - Type inference
+   - Generic types and templates
+   - Custom type definitions
+
+3. **Compilation**:
+   - Compile to bytecode instead of interpreting AST
+   - Virtual machine implementation
+   - Just-in-time (JIT) compilation
+   - Native code generation
+
+4. **Standard Library**:
+   - File I/O operations
+   - String manipulation functions
+   - Mathematical operations and constants
+   - Data structures (sets, maps, stacks, queues)
+
+5. **Development Tools**:
+   - Interactive REPL (Read-Eval-Print Loop)
+   - Debugger with breakpoints
+   - Profiler for performance analysis
+   - Package manager for libraries
+
+6. **Advanced Features**:
+   - Coroutines and async/await
+   - Pattern matching
+   - Macros and metaprogramming
+   - Memory management and garbage collection
+
+This challenge will give you deep insights into programming language design, compiler theory, and runtime systems. The skills learned here are applicable to creating domain-specific languages, improving your understanding of existing languages, and designing better APIs.

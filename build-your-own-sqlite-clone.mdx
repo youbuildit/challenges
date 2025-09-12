@@ -1,0 +1,504 @@
+---
+title: Build Your Own SQLite Clone
+summary: Create a lightweight relational database engine with SQL support. Learn about database internals, B-trees, query parsing, and transaction management.
+skills:
+- Database Systems
+- B-tree Data Structures
+- SQL Parsing
+- File Storage
+difficulty: Advanced
+category: Database
+estimatedTime: 10-12 hours
+---
+
+This challenge is inspired by SQLite, one of the most widely used database engines in the world. SQLite is a lightweight, serverless, self-contained SQL database engine that's embedded in countless applications. By building your own SQLite clone, you'll learn about database internals, storage engines, query parsing, and the fundamental concepts that power modern database systems.
+
+## Table of Contents
+
+SQLite demonstrates several important database concepts:
+
+- **B-tree Storage**: Efficient disk-based data structures for storing and retrieving records.
+- **SQL Parsing**: Convert SQL statements into executable query plans.
+- **Transaction Management**: Ensure ACID properties and data consistency.
+- **Query Execution**: Implement joins, aggregations, and other SQL operations.
+
+Understanding database internals will make you a better software engineer and help you optimize database interactions in your applications.
+
+## The Challenge
+
+Your task is to implement a simplified SQLite-compatible database engine that can create tables, insert data, execute queries, and persist data to disk. The database should support basic SQL operations and provide a foundation for understanding how relational databases work.
+
+## Core Features
+
+Your SQLite clone should support:
+
+1. **SQL Operations**:
+   - CREATE TABLE with column definitions
+   - INSERT INTO with value insertion
+   - SELECT with WHERE clauses, JOINs, ORDER BY
+   - UPDATE with conditional updates
+   - DELETE with conditional deletion
+   - Basic data types (INTEGER, TEXT, REAL)
+
+2. **Storage Engine**:
+   - B-tree based storage for efficient retrieval
+   - Page-based file format for disk persistence
+   - Index support for fast lookups
+   - Transaction logging for durability
+
+3. **Query Processing**:
+   - SQL parser to convert statements to AST
+   - Query planner to optimize execution
+   - Row-based execution engine
+   - Result set management
+
+## Example Usage
+
+Here's how your SQLite clone should work:
+
+```sql
+-- Create a database connection
+$ mydb database.db
+
+-- Create tables
+sqlite> CREATE TABLE users (
+   ...>     id INTEGER PRIMARY KEY,
+   ...>     name TEXT NOT NULL,
+   ...>     email TEXT UNIQUE,
+   ...>     age INTEGER
+   ...> );
+
+sqlite> CREATE TABLE posts (
+   ...>     id INTEGER PRIMARY KEY,
+   ...>     user_id INTEGER,
+   ...>     title TEXT NOT NULL,
+   ...>     content TEXT,
+   ...>     created_at INTEGER,
+   ...>     FOREIGN KEY (user_id) REFERENCES users(id)
+   ...> );
+
+-- Insert data
+sqlite> INSERT INTO users (name, email, age) VALUES ('Alice', 'alice@example.com', 25);
+sqlite> INSERT INTO users (name, email, age) VALUES ('Bob', 'bob@example.com', 30);
+sqlite> INSERT INTO posts (user_id, title, content, created_at) 
+   ...> VALUES (1, 'First Post', 'Hello World!', 1640995200);
+
+-- Query data
+sqlite> SELECT * FROM users WHERE age > 25;
+id|name|email|age
+2|Bob|bob@example.com|30
+
+sqlite> SELECT u.name, p.title 
+   ...> FROM users u 
+   ...> JOIN posts p ON u.id = p.user_id;
+name|title
+Alice|First Post
+
+-- Update data
+sqlite> UPDATE users SET age = 26 WHERE name = 'Alice';
+
+-- Delete data
+sqlite> DELETE FROM posts WHERE user_id = 1;
+
+-- Show table schema
+sqlite> .schema users
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE,
+    age INTEGER
+);
+```
+
+## Database File Format
+
+Your database should use a page-based file format:
+
+```python
+class DatabasePage:
+    PAGE_SIZE = 4096
+    
+    def __init__(self, page_type, data=None):
+        self.page_type = page_type  # 'table', 'index', 'overflow'
+        self.data = data or bytearray(self.PAGE_SIZE)
+        self.header = PageHeader()
+    
+    def write_to_file(self, file_handle, page_number):
+        file_handle.seek(page_number * self.PAGE_SIZE)
+        file_handle.write(self.data)
+    
+    @classmethod
+    def read_from_file(cls, file_handle, page_number):
+        file_handle.seek(page_number * self.PAGE_SIZE)
+        data = file_handle.read(cls.PAGE_SIZE)
+        return cls.parse_page(data)
+
+class PageHeader:
+    def __init__(self):
+        self.page_type = 0      # 1 byte: table leaf, index leaf, etc.
+        self.free_block_start = 0  # 2 bytes: start of free space
+        self.num_cells = 0      # 2 bytes: number of records
+        self.cell_content_start = 0  # 2 bytes: start of cell content area
+        self.fragmented_bytes = 0   # 1 byte: fragmented free bytes
+        self.right_most_pointer = 0 # 4 bytes: for interior pages
+
+class BTreeNode:
+    def __init__(self, page, is_leaf=True):
+        self.page = page
+        self.is_leaf = is_leaf
+        self.keys = []
+        self.values = []  # For leaf nodes
+        self.children = []  # For interior nodes
+    
+    def search(self, key):
+        """Search for a key in the B-tree"""
+        if self.is_leaf:
+            for i, k in enumerate(self.keys):
+                if k == key:
+                    return self.values[i]
+            return None
+        else:
+            # Find appropriate child
+            for i, k in enumerate(self.keys):
+                if key < k:
+                    return self.children[i].search(key)
+            return self.children[-1].search(key)
+    
+    def insert(self, key, value):
+        """Insert a key-value pair into the B-tree"""
+        if self.is_leaf:
+            # Insert into leaf node
+            insert_pos = 0
+            while insert_pos < len(self.keys) and self.keys[insert_pos] < key:
+                insert_pos += 1
+            
+            self.keys.insert(insert_pos, key)
+            self.values.insert(insert_pos, value)
+            
+            # Check if node needs to be split
+            if len(self.keys) > self.max_keys:
+                return self.split()
+        else:
+            # Insert into interior node
+            child_index = 0
+            while child_index < len(self.keys) and key >= self.keys[child_index]:
+                child_index += 1
+            
+            split_result = self.children[child_index].insert(key, value)
+            if split_result:
+                # Handle child split
+                self.handle_child_split(child_index, split_result)
+```
+
+## SQL Parser Implementation
+
+```python
+import re
+from enum import Enum
+from typing import List, Dict, Any, Optional
+
+class TokenType(Enum):
+    KEYWORD = "KEYWORD"
+    IDENTIFIER = "IDENTIFIER"
+    NUMBER = "NUMBER"
+    STRING = "STRING"
+    OPERATOR = "OPERATOR"
+    PUNCTUATION = "PUNCTUATION"
+
+class Token:
+    def __init__(self, type: TokenType, value: str, position: int):
+        self.type = type
+        self.value = value
+        self.position = position
+
+class SQLLexer:
+    KEYWORDS = {
+        'SELECT', 'FROM', 'WHERE', 'INSERT', 'UPDATE', 'DELETE',
+        'CREATE', 'TABLE', 'INTO', 'VALUES', 'SET', 'JOIN',
+        'INNER', 'LEFT', 'RIGHT', 'ON', 'ORDER', 'BY', 'GROUP',
+        'HAVING', 'LIMIT', 'OFFSET', 'INTEGER', 'TEXT', 'REAL',
+        'PRIMARY', 'KEY', 'NOT', 'NULL', 'UNIQUE', 'FOREIGN',
+        'REFERENCES'
+    }
+    
+    def tokenize(self, sql: str) -> List[Token]:
+        tokens = []
+        i = 0
+        
+        while i < len(sql):
+            if sql[i].isspace():
+                i += 1
+            elif sql[i] == '"' or sql[i] == "'":
+                # String literal
+                quote = sql[i]
+                i += 1
+                start = i
+                while i < len(sql) and sql[i] != quote:
+                    if sql[i] == '\\':  # Handle escape sequences
+                        i += 2
+                    else:
+                        i += 1
+                
+                tokens.append(Token(TokenType.STRING, sql[start:i], start))
+                i += 1  # Skip closing quote
+                
+            elif sql[i].isdigit():
+                # Number
+                start = i
+                while i < len(sql) and (sql[i].isdigit() or sql[i] == '.'):
+                    i += 1
+                tokens.append(Token(TokenType.NUMBER, sql[start:i], start))
+                
+            elif sql[i].isalpha() or sql[i] == '_':
+                # Identifier or keyword
+                start = i
+                while i < len(sql) and (sql[i].isalnum() or sql[i] == '_'):
+                    i += 1
+                
+                word = sql[start:i].upper()
+                token_type = TokenType.KEYWORD if word in self.KEYWORDS else TokenType.IDENTIFIER
+                tokens.append(Token(token_type, word, start))
+                
+            else:
+                # Operators and punctuation
+                if sql[i:i+2] in ['<=', '>=', '!=', '<>']:
+                    tokens.append(Token(TokenType.OPERATOR, sql[i:i+2], i))
+                    i += 2
+                elif sql[i] in '=<>+-*/(),;':
+                    token_type = TokenType.OPERATOR if sql[i] in '=<>+-*/' else TokenType.PUNCTUATION
+                    tokens.append(Token(token_type, sql[i], i))
+                    i += 1
+                else:
+                    i += 1  # Skip unknown characters
+        
+        return tokens
+
+class SQLParser:
+    def __init__(self, tokens: List[Token]):
+        self.tokens = tokens
+        self.position = 0
+    
+    def parse(self):
+        """Parse SQL statement and return AST"""
+        if self.current_token().value == 'SELECT':
+            return self.parse_select()
+        elif self.current_token().value == 'INSERT':
+            return self.parse_insert()
+        elif self.current_token().value == 'CREATE':
+            return self.parse_create()
+        elif self.current_token().value == 'UPDATE':
+            return self.parse_update()
+        elif self.current_token().value == 'DELETE':
+            return self.parse_delete()
+        else:
+            raise Exception(f"Unexpected token: {self.current_token().value}")
+    
+    def parse_select(self):
+        """Parse SELECT statement"""
+        self.expect_keyword('SELECT')
+        
+        # Parse column list
+        columns = self.parse_column_list()
+        
+        self.expect_keyword('FROM')
+        table = self.current_token().value
+        self.advance()
+        
+        # Optional WHERE clause
+        where_clause = None
+        if self.current_token() and self.current_token().value == 'WHERE':
+            self.advance()
+            where_clause = self.parse_expression()
+        
+        return {
+            'type': 'SELECT',
+            'columns': columns,
+            'table': table,
+            'where': where_clause
+        }
+    
+    def parse_expression(self):
+        """Parse WHERE clause expression"""
+        left = self.parse_primary()
+        
+        while (self.current_token() and 
+               self.current_token().type == TokenType.OPERATOR):
+            operator = self.current_token().value
+            self.advance()
+            right = self.parse_primary()
+            
+            left = {
+                'type': 'binary_op',
+                'operator': operator,
+                'left': left,
+                'right': right
+            }
+        
+        return left
+```
+
+## Implementation Steps
+
+1. **File Storage System**:
+   - Implement page-based file format
+   - Create page allocation and management
+   - Handle file header with metadata
+   - Implement free space management
+
+2. **B-tree Implementation**:
+   - Create B-tree nodes (leaf and interior)
+   - Implement search, insert, and delete operations
+   - Handle node splitting and merging
+   - Support different data types as keys
+
+3. **SQL Parser**:
+   - Implement lexical analysis (tokenization)
+   - Build recursive descent parser for SQL grammar
+   - Create Abstract Syntax Tree (AST) representation
+   - Handle syntax errors and recovery
+
+4. **Query Execution Engine**:
+   - Implement table scan operations
+   - Create index-based lookups
+   - Support WHERE clause evaluation
+   - Handle JOIN operations and result merging
+
+5. **Transaction Management**:
+   - Implement write-ahead logging (WAL)
+   - Handle commit and rollback operations
+   - Ensure ACID properties
+   - Manage concurrent access (basic locking)
+
+## Query Execution Example
+
+```python
+class QueryExecutor:
+    def __init__(self, database):
+        self.database = database
+    
+    def execute(self, ast):
+        """Execute parsed SQL statement"""
+        if ast['type'] == 'SELECT':
+            return self.execute_select(ast)
+        elif ast['type'] == 'INSERT':
+            return self.execute_insert(ast)
+        # ... other statement types
+    
+    def execute_select(self, ast):
+        """Execute SELECT statement"""
+        table_name = ast['table']
+        table = self.database.get_table(table_name)
+        
+        # Start with full table scan
+        rows = table.scan_all()
+        
+        # Apply WHERE clause if present
+        if ast['where']:
+            rows = [row for row in rows if self.evaluate_expression(ast['where'], row)]
+        
+        # Project columns
+        if ast['columns'] == ['*']:
+            result_columns = table.columns
+            result_rows = rows
+        else:
+            result_columns = ast['columns']
+            result_rows = []
+            for row in rows:
+                projected_row = {}
+                for col in ast['columns']:
+                    projected_row[col] = row.get(col)
+                result_rows.append(projected_row)
+        
+        return ResultSet(result_columns, result_rows)
+    
+    def evaluate_expression(self, expr, row):
+        """Evaluate WHERE clause expression against a row"""
+        if expr['type'] == 'binary_op':
+            left_val = self.get_value(expr['left'], row)
+            right_val = self.get_value(expr['right'], row)
+            
+            if expr['operator'] == '=':
+                return left_val == right_val
+            elif expr['operator'] == '<':
+                return left_val < right_val
+            elif expr['operator'] == '>':
+                return left_val > right_val
+            # ... other operators
+        
+        return True
+    
+    def get_value(self, node, row):
+        """Get value from expression node"""
+        if node['type'] == 'column':
+            return row.get(node['name'])
+        elif node['type'] == 'literal':
+            return node['value']
+        # ... other node types
+
+class ResultSet:
+    def __init__(self, columns, rows):
+        self.columns = columns
+        self.rows = rows
+    
+    def display(self):
+        """Display result set in table format"""
+        if not self.rows:
+            print("No results")
+            return
+        
+        # Print header
+        print("|".join(self.columns))
+        
+        # Print rows
+        for row in self.rows:
+            values = [str(row.get(col, '')) for col in self.columns]
+            print("|".join(values))
+```
+
+## Extra Credit
+
+Extend your SQLite clone with these additional features:
+
+1. **Advanced SQL Support**:
+   - Implement GROUP BY and aggregate functions (COUNT, SUM, AVG)
+   - Support HAVING clauses and subqueries
+   - Add support for multiple JOINs and JOIN types
+   - Implement UNION and other set operations
+
+2. **Query Optimization**:
+   - Create a cost-based query planner
+   - Implement join reordering and optimization
+   - Add statistics collection for better plans
+   - Support query plan visualization
+
+3. **Indexing System**:
+   - Implement B+ tree indexes for fast lookups
+   - Support composite indexes on multiple columns
+   - Add unique and partial index support
+   - Automatic index recommendation system
+
+4. **Advanced Storage**:
+   - Implement variable-length record storage
+   - Add compression for text and numeric data
+   - Support BLOB data types and storage
+   - Implement database file compaction
+
+5. **Concurrency and Transactions**:
+   - Multi-version concurrency control (MVCC)
+   - Deadlock detection and resolution
+   - Support for multiple isolation levels
+   - Optimistic locking strategies
+
+6. **Performance and Monitoring**:
+   - Query performance profiling and analysis
+   - Database statistics and monitoring
+   - Memory usage optimization
+   - Parallel query execution
+
+7. **SQL Compliance**:
+   - Support for views and triggers
+   - Stored procedures and functions
+   - Advanced constraints (CHECK, FOREIGN KEY)
+   - Full SQL standard compliance
+
+This challenge will give you deep insights into database internals, storage systems, and query processing—knowledge that's invaluable for any software engineer working with data-intensive applications.

@@ -1,0 +1,398 @@
+---
+title: Build Your Own WebSocket Server
+summary: Create a WebSocket server that enables real-time bidirectional communication. Learn about WebSocket protocol, frame parsing, and real-time messaging.
+skills:
+- WebSocket Protocol
+- Real-time Communication
+- Network Programming
+- Event-driven Architecture
+difficulty: Advanced
+category: Web Development
+estimatedTime: 6-8 hours
+---
+
+This challenge is inspired by WebSocket servers that enable real-time, bidirectional communication between clients and servers. WebSockets are essential for applications like chat systems, real-time gaming, live updates, and collaborative tools. By building your own WebSocket server, you'll learn about the WebSocket protocol, frame parsing, and event-driven programming.
+
+## Table of Contents
+
+WebSocket servers demonstrate several important web development concepts:
+
+- **Real-time Communication**: Enable instant bidirectional data exchange between client and server.
+- **Protocol Upgrade**: Handle the HTTP to WebSocket protocol upgrade handshake.
+- **Frame Parsing**: Process WebSocket frames with different opcodes and payload types.
+- **Connection Management**: Handle multiple concurrent connections and broadcast messages.
+
+Understanding WebSockets is crucial for building modern real-time web applications and understanding how persistent connections work.
+
+## The Challenge
+
+Your task is to implement a WebSocket server that can handle the WebSocket handshake, parse WebSocket frames, and manage multiple client connections for real-time communication. The server should support different message types and provide a foundation for building real-time applications.
+
+## WebSocket Protocol Basics
+
+Your WebSocket server should understand the core WebSocket protocol:
+
+1. **Handshake Process**:
+   - Receive HTTP upgrade request with WebSocket headers
+   - Validate Sec-WebSocket-Key and compute response
+   - Send HTTP 101 Switching Protocols response
+   - Establish WebSocket connection
+
+2. **Frame Structure**:
+   - FIN bit: Indicates if this is the final fragment
+   - Opcode: Frame type (text, binary, close, ping, pong)
+   - Mask bit: Indicates if payload is masked (client to server)
+   - Payload length: Variable length encoding
+   - Masking key: 4-byte key for unmasking payload
+
+3. **Message Types**:
+   - Text frames (UTF-8 text data)
+   - Binary frames (arbitrary binary data)
+   - Control frames (close, ping, pong)
+   - Fragmented messages across multiple frames
+
+## Supported Features
+
+Your WebSocket server should support:
+
+1. **Protocol Implementation**:
+   - WebSocket handshake validation and response
+   - Frame parsing and construction
+   - Payload masking/unmasking
+   - Proper connection close handling
+
+2. **Connection Management**:
+   - Handle multiple concurrent connections
+   - Connection state tracking
+   - Automatic ping/pong heartbeat
+   - Connection cleanup on disconnect
+
+3. **Message Handling**:
+   - Text and binary message support
+   - Message broadcasting to all clients
+   - Targeted messaging to specific clients
+   - Message queuing and delivery guarantees
+
+## Example Usage
+
+Here's how your WebSocket server should work:
+
+```python
+# Basic WebSocket server
+class WebSocketServer:
+    def __init__(self, host='localhost', port=8080):
+        self.host = host
+        self.port = port
+        self.connections = {}
+        self.message_handlers = {}
+    
+    def on_message(self, message_type):
+        def decorator(func):
+            self.message_handlers[message_type] = func
+            return func
+        return decorator
+    
+    def start(self):
+        print(f"WebSocket server starting on {self.host}:{self.port}")
+        # Server implementation...
+
+# Usage example
+server = WebSocketServer()
+
+@server.on_message('chat')
+def handle_chat_message(client_id, message):
+    # Broadcast message to all clients
+    server.broadcast({
+        'type': 'chat',
+        'user': message['user'],
+        'text': message['text'],
+        'timestamp': time.time()
+    })
+
+@server.on_message('join')
+def handle_user_join(client_id, message):
+    server.broadcast({
+        'type': 'user_joined',
+        'user': message['user']
+    })
+
+server.start()
+```
+
+## WebSocket Handshake Implementation
+
+```python
+import hashlib
+import base64
+import socket
+
+WEBSOCKET_MAGIC_STRING = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+
+def parse_http_request(data):
+    lines = data.decode('utf-8').split('\r\n')
+    request_line = lines[0]
+    headers = {}
+    
+    for line in lines[1:]:
+        if ':' in line:
+            key, value = line.split(':', 1)
+            headers[key.strip().lower()] = value.strip()
+    
+    return request_line, headers
+
+def create_websocket_response(websocket_key):
+    # Create WebSocket accept key
+    accept_key = base64.b64encode(
+        hashlib.sha1((websocket_key + WEBSOCKET_MAGIC_STRING).encode()).digest()
+    ).decode()
+    
+    response = (
+        "HTTP/1.1 101 Switching Protocols\r\n"
+        "Upgrade: websocket\r\n"
+        "Connection: Upgrade\r\n"
+        f"Sec-WebSocket-Accept: {accept_key}\r\n"
+        "\r\n"
+    )
+    
+    return response.encode()
+
+def handle_websocket_handshake(client_socket):
+    # Receive HTTP request
+    request_data = client_socket.recv(4096)
+    request_line, headers = parse_http_request(request_data)
+    
+    # Validate WebSocket headers
+    if (headers.get('upgrade', '').lower() != 'websocket' or
+        'websocket' not in headers.get('connection', '').lower() or
+        'sec-websocket-key' not in headers):
+        return False
+    
+    # Send WebSocket handshake response
+    websocket_key = headers['sec-websocket-key']
+    response = create_websocket_response(websocket_key)
+    client_socket.send(response)
+    
+    return True
+```
+
+## WebSocket Frame Parsing
+
+```python
+import struct
+
+class WebSocketFrame:
+    def __init__(self, fin=True, opcode=1, masked=False, payload=b''):
+        self.fin = fin
+        self.opcode = opcode
+        self.masked = masked
+        self.payload = payload
+    
+    @classmethod
+    def parse(cls, data):
+        if len(data) < 2:
+            return None
+        
+        # Parse first two bytes
+        byte1, byte2 = struct.unpack('!BB', data[:2])
+        
+        fin = bool(byte1 & 0x80)
+        opcode = byte1 & 0x0F
+        masked = bool(byte2 & 0x80)
+        payload_length = byte2 & 0x7F
+        
+        offset = 2
+        
+        # Handle extended payload length
+        if payload_length == 126:
+            payload_length = struct.unpack('!H', data[offset:offset+2])[0]
+            offset += 2
+        elif payload_length == 127:
+            payload_length = struct.unpack('!Q', data[offset:offset+8])[0]
+            offset += 8
+        
+        # Handle masking key
+        mask_key = None
+        if masked:
+            mask_key = data[offset:offset+4]
+            offset += 4
+        
+        # Extract payload
+        payload = data[offset:offset+payload_length]
+        
+        # Unmask payload if necessary
+        if masked and mask_key:
+            payload = bytes(b ^ mask_key[i % 4] for i, b in enumerate(payload))
+        
+        return cls(fin=fin, opcode=opcode, masked=masked, payload=payload)
+    
+    def to_bytes(self):
+        # Construct frame header
+        byte1 = 0x80 if self.fin else 0x00  # FIN bit
+        byte1 |= self.opcode & 0x0F
+        
+        payload_length = len(self.payload)
+        
+        if payload_length < 126:
+            header = struct.pack('!BB', byte1, payload_length)
+        elif payload_length < 65536:
+            header = struct.pack('!BBH', byte1, 126, payload_length)
+        else:
+            header = struct.pack('!BBQ', byte1, 127, payload_length)
+        
+        return header + self.payload
+
+# WebSocket opcodes
+OPCODE_CONTINUATION = 0x0
+OPCODE_TEXT = 0x1
+OPCODE_BINARY = 0x2
+OPCODE_CLOSE = 0x8
+OPCODE_PING = 0x9
+OPCODE_PONG = 0xa
+```
+
+## Implementation Steps
+
+1. **HTTP to WebSocket Upgrade**:
+   - Parse incoming HTTP request headers
+   - Validate required WebSocket headers
+   - Compute Sec-WebSocket-Accept response
+   - Send HTTP 101 Switching Protocols response
+
+2. **Frame Processing**:
+   - Parse WebSocket frame headers and payload
+   - Handle variable-length payload encoding
+   - Implement payload masking/unmasking
+   - Support fragmented messages
+
+3. **Connection Management**:
+   - Maintain active connection registry
+   - Handle connection lifecycle events
+   - Implement connection heartbeat (ping/pong)
+   - Clean up resources on disconnect
+
+4. **Message Routing**:
+   - Parse JSON or custom message formats
+   - Route messages to appropriate handlers
+   - Support broadcast and unicast messaging
+   - Implement message queuing for offline clients
+
+5. **Error Handling**:
+   - Handle malformed frames gracefully
+   - Implement proper close handshake
+   - Provide detailed error logging
+   - Handle network interruptions
+
+## Real-world Applications
+
+```python
+class ChatServer(WebSocketServer):
+    def __init__(self):
+        super().__init__()
+        self.rooms = {}
+        self.users = {}
+    
+    @server.on_message('join_room')
+    def join_room(self, client_id, message):
+        room_id = message['room_id']
+        user_name = message['user_name']
+        
+        if room_id not in self.rooms:
+            self.rooms[room_id] = set()
+        
+        self.rooms[room_id].add(client_id)
+        self.users[client_id] = {'name': user_name, 'room': room_id}
+        
+        # Notify room members
+        self.broadcast_to_room(room_id, {
+            'type': 'user_joined',
+            'user_name': user_name,
+            'room_id': room_id
+        })
+    
+    @server.on_message('chat_message')
+    def handle_chat(self, client_id, message):
+        user = self.users.get(client_id)
+        if user:
+            self.broadcast_to_room(user['room'], {
+                'type': 'message',
+                'user_name': user['name'],
+                'message': message['text'],
+                'timestamp': time.time()
+            })
+    
+    def broadcast_to_room(self, room_id, message):
+        if room_id in self.rooms:
+            for client_id in self.rooms[room_id]:
+                self.send_to_client(client_id, message)
+
+# Game server example
+class GameServer(WebSocketServer):
+    def __init__(self):
+        super().__init__()
+        self.game_state = {}
+        self.players = {}
+    
+    @server.on_message('player_move')
+    def handle_move(self, client_id, message):
+        # Update game state
+        self.update_player_position(client_id, message['position'])
+        
+        # Broadcast to all players
+        self.broadcast_game_state()
+    
+    def broadcast_game_state(self):
+        state_message = {
+            'type': 'game_state',
+            'players': self.players,
+            'timestamp': time.time()
+        }
+        self.broadcast(state_message)
+```
+
+## Extra Credit
+
+Extend your WebSocket server with these additional features:
+
+1. **Advanced Protocol Features**:
+   - WebSocket subprotocol negotiation
+   - Compression extension support (per-message deflate)
+   - WebSocket over TLS (WSS) support
+   - Custom extension handling
+
+2. **Scalability and Performance**:
+   - Connection pooling and load balancing
+   - Horizontal scaling across multiple servers
+   - Message queuing with Redis or similar
+   - Connection state persistence
+
+3. **Security Features**:
+   - Origin validation and CORS handling
+   - Rate limiting and abuse prevention
+   - Authentication and authorization
+   - Message validation and sanitization
+
+4. **Monitoring and Debugging**:
+   - Connection statistics and metrics
+   - Real-time monitoring dashboard
+   - Frame-level debugging tools
+   - Performance profiling and optimization
+
+5. **Client Integration**:
+   - JavaScript WebSocket client library
+   - Automatic reconnection with exponential backoff
+   - Message buffering during disconnections
+   - Client-side connection health monitoring
+
+6. **Advanced Messaging**:
+   - Message acknowledgment system
+   - Ordered message delivery guarantees
+   - Message persistence and replay
+   - Publish/subscribe pattern implementation
+
+7. **Framework Integration**:
+   - Integration with web frameworks (Flask, FastAPI, etc.)
+   - Middleware support for request/response processing
+   - Plugin architecture for custom functionality
+   - REST API integration for hybrid applications
+
+This challenge will teach you about real-time web technologies, network protocol implementation, and the complexities involved in building scalable real-time applications. The skills learned here are directly applicable to building chat systems, collaborative tools, real-time gaming, and IoT applications.

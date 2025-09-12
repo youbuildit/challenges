@@ -1,0 +1,182 @@
+---
+title: Build Your Own sed Tool
+summary: Create a stream editor for filtering and transforming text. Learn about regular expressions, pattern matching, and text manipulation.
+skills:
+- Regular Expressions
+- Text Processing
+- Pattern Matching
+- Stream Processing
+difficulty: Intermediate
+category: Text Processing
+estimatedTime: 5-7 hours
+---
+
+This challenge is inspired by the `sed` (stream editor) command-line tool in Unix-like systems. The `sed` tool is a powerful stream editor that can perform complex text transformations using regular expressions and scripting commands. By building your own version of `sed`, you'll learn about stream processing, pattern matching, and text transformation techniques.
+
+## Table of Contents
+
+The `sed` command represents sophisticated text processing principles:
+
+- **Stream Processing**: Process text line by line without loading entire files into memory.
+- **Pattern Matching**: Use regular expressions to identify and manipulate text patterns.
+- **Scriptability**: Support complex transformation scripts for automated text processing.
+
+You can learn more about the original `sed` command by reading its manual page:
+
+```bash
+man sed
+```
+
+## The Challenge
+
+Your task is to create a stream editor that can perform text transformations on input streams. The tool should support pattern matching, substitution, deletion, and other text manipulation operations using a command-based syntax similar to `sed`.
+
+## Supported Commands
+
+Your `sed` implementation should support the following core commands:
+
+- `s/pattern/replacement/flags` - Substitute text matching pattern with replacement
+- `d` - Delete pattern space (current line)
+- `p` - Print pattern space
+- `n` - Read next line into pattern space
+- `q` - Quit immediately
+- `=` - Print current line number
+- `a\text` - Append text after current line
+- `i\text` - Insert text before current line
+- `c\text` - Replace current line with text
+
+## Supported Flags
+
+For substitution commands, support these flags:
+
+- `g` - Global replacement (all occurrences in line)
+- `p` - Print line if substitution was made
+- `w filename` - Write line to file if substitution was made
+- `I` or `i` - Case-insensitive matching
+- Numbers (1,2,3...) - Replace only nth occurrence
+
+## Example Usage
+
+Here's how your tool should work:
+
+```bash
+# Basic substitution
+$ echo "Hello World" | sed 's/World/Universe/'
+Hello Universe
+
+# Global substitution
+$ echo "foo foo foo" | sed 's/foo/bar/g'
+bar bar bar
+
+# Delete lines containing pattern
+$ sed '/error/d' logfile.txt
+
+# Print only lines matching pattern
+$ sed -n '/success/p' logfile.txt
+
+# Multiple commands
+$ sed -e 's/old/new/g' -e '/debug/d' file.txt
+
+# Line number operations
+$ sed '3d' file.txt          # Delete line 3
+$ sed '2,5d' file.txt        # Delete lines 2 through 5
+$ sed '/start/,/end/d' file.txt  # Delete from start to end pattern
+
+# Insert and append
+$ sed '2i\New line inserted' file.txt
+$ sed '2a\New line appended' file.txt
+
+# Address ranges
+$ sed '1,3s/old/new/' file.txt     # Substitute only in lines 1-3
+$ sed '/pattern/s/old/new/' file.txt # Substitute only in lines matching pattern
+
+# Case-insensitive matching
+$ sed 's/ERROR/warning/gI' file.txt
+
+# Write modified lines to file
+$ sed 's/pattern/replacement/gw output.txt' file.txt
+```
+
+## Implementation Steps
+
+1. **Command Parsing**:
+   - Parse sed command-line arguments and script syntax
+   - Handle different address types (line numbers, patterns, ranges)
+   - Support multiple commands with `-e` option
+
+2. **Pattern Space Management**:
+   - Implement the pattern space (current line buffer)
+   - Handle line reading and processing cycle
+   - Manage automatic printing behavior
+
+3. **Regular Expression Engine**:
+   - Implement or integrate regex matching capabilities
+   - Support basic regex features (literals, wildcards, anchors, groups)
+   - Handle case-insensitive matching
+
+4. **Command Execution**:
+   - Implement substitution with various flags
+   - Handle deletion, printing, and line manipulation commands
+   - Support address-based command execution
+
+5. **Advanced Features**:
+   - Implement hold space for advanced scripting
+   - Support branching and control flow
+   - Handle file I/O operations
+
+## Advanced sed Commands
+
+```bash
+# Using hold space
+$ sed -e '/pattern/h' -e '$g' file.txt  # Save and restore from hold space
+
+# Branching
+$ sed -e '/skip/b end' -e 's/old/new/' -e ':end' file.txt
+
+# Multi-line patterns
+$ sed -e '/start/{' -e 'N' -e 's/start.*end/replacement/' -e '}' file.txt
+
+# Conditional execution
+$ sed -e '/pattern/!d' file.txt  # Delete lines NOT matching pattern
+```
+
+## Extra Credit
+
+Extend your `sed` implementation with these additional features:
+
+1. **Advanced Commands**:
+   - `N` - Append next line to pattern space
+   - `P` - Print first line of pattern space
+   - `D` - Delete first line of pattern space
+   - `h`, `H`, `g`, `G` - Hold space operations
+   - `x` - Exchange pattern and hold spaces
+
+2. **Control Flow**:
+   - `b label` - Branch to label
+   - `t label` - Branch on successful substitution
+   - `:label` - Define labels
+   - `T label` - Branch on failed substitution
+
+3. **Enhanced Pattern Matching**:
+   - Support extended regular expressions
+   - Implement backreferences in substitutions
+   - Add support for word boundaries and character classes
+
+4. **File Operations**:
+   - `r filename` - Read file and append to output
+   - `w filename` - Write pattern space to file
+   - `R filename` - Read one line from file
+   - `W filename` - Write first line of pattern space to file
+
+5. **Performance Optimizations**:
+   - Optimize regex compilation and reuse
+   - Implement efficient line buffering
+   - Add parallel processing for multiple files
+
+6. **Debugging and Utilities**:
+   - Add debug mode to show internal state
+   - Implement sed script validation
+   - Support sed script files with `-f` option
+   - Add verbose output for troubleshooting
+
+This challenge will deepen your understanding of text processing, regular expressions, and the powerful programming model that makes `sed` such a versatile tool for text manipulation.

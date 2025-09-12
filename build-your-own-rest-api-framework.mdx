@@ -1,0 +1,484 @@
+---
+title: Build Your Own REST API Framework
+summary: Create a lightweight REST API framework with routing, middleware, and request handling. Learn about web frameworks, HTTP processing, and API design patterns.
+skills:
+- Web Frameworks
+- HTTP Protocol
+- Routing
+- Middleware Architecture
+difficulty: Advanced
+category: Web Development
+estimatedTime: 6-8 hours
+---
+
+This challenge is inspired by REST API frameworks like Express.js, Flask, FastAPI, and Sinatra. These frameworks provide the foundation for building web APIs by handling HTTP requests, routing, middleware processing, and response generation. By building your own REST API framework, you'll learn about web framework architecture, HTTP protocol handling, and the patterns that make modern web development productive.
+
+## Table of Contents
+
+REST API frameworks demonstrate several important web development concepts:
+
+- **HTTP Processing**: Parse and handle HTTP requests and generate appropriate responses.
+- **Routing System**: Match URLs to handler functions with parameter extraction.
+- **Middleware Architecture**: Process requests through a chain of middleware functions.
+- **Request/Response Abstraction**: Provide convenient APIs for working with HTTP data.
+
+Understanding how web frameworks work will make you a more effective web developer and help you appreciate the tools you use daily.
+
+## The Challenge
+
+Your task is to create a lightweight REST API framework that can handle HTTP requests, route them to appropriate handlers, process middleware, and generate responses. The framework should be easy to use while being flexible enough to build real applications.
+
+## Framework Features
+
+Your REST API framework should support:
+
+1. **HTTP Method Handling**:
+   - Support for GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS
+   - Method-specific route registration
+   - Request method validation
+
+2. **Routing System**:
+   - Static routes: `/users`, `/api/status`
+   - Dynamic routes with parameters: `/users/:id`, `/posts/:slug`
+   - Wildcard and optional parameters
+   - Route groups and prefixes
+
+3. **Middleware Support**:
+   - Request preprocessing middleware
+   - Response postprocessing middleware
+   - Error handling middleware
+   - Authentication and authorization middleware
+
+4. **Request/Response Objects**:
+   - Parsed request data (JSON, form data, query parameters)
+   - Response helpers (JSON, HTML, status codes, headers)
+   - File upload handling
+   - Cookie and session management
+
+## Example Usage
+
+Here's how your framework should be used:
+
+```python
+from myframework import App, Request, Response
+
+app = App()
+
+# Basic route handlers
+@app.get('/')
+def home(req: Request, res: Response):
+    return res.json({'message': 'Hello, World!'})
+
+@app.get('/users')
+def list_users(req: Request, res: Response):
+    users = get_all_users()
+    return res.json(users)
+
+@app.get('/users/:id')
+def get_user(req: Request, res: Response):
+    user_id = req.params['id']
+    user = get_user_by_id(user_id)
+    
+    if not user:
+        return res.status(404).json({'error': 'User not found'})
+    
+    return res.json(user)
+
+@app.post('/users')
+def create_user(req: Request, res: Response):
+    user_data = req.json()
+    
+    # Validate input
+    if not user_data.get('email'):
+        return res.status(400).json({'error': 'Email is required'})
+    
+    user = create_new_user(user_data)
+    return res.status(201).json(user)
+
+@app.put('/users/:id')
+def update_user(req: Request, res: Response):
+    user_id = req.params['id']
+    user_data = req.json()
+    
+    user = update_user_by_id(user_id, user_data)
+    return res.json(user)
+
+@app.delete('/users/:id')
+def delete_user(req: Request, res: Response):
+    user_id = req.params['id']
+    delete_user_by_id(user_id)
+    return res.status(204).send()
+
+# Middleware examples
+@app.middleware
+def auth_middleware(req: Request, res: Response, next):
+    token = req.headers.get('Authorization')
+    
+    if not token:
+        return res.status(401).json({'error': 'No token provided'})
+    
+    try:
+        user = verify_token(token)
+        req.user = user
+        return next()
+    except InvalidToken:
+        return res.status(401).json({'error': 'Invalid token'})
+
+@app.middleware
+def cors_middleware(req: Request, res: Response, next):
+    res.header('Access-Control-Allow-Origin', '*')
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    
+    if req.method == 'OPTIONS':
+        return res.status(200).send()
+    
+    return next()
+
+# Route groups
+api_v1 = app.group('/api/v1')
+
+@api_v1.get('/status')
+def api_status(req: Request, res: Response):
+    return res.json({'version': '1.0', 'status': 'healthy'})
+
+@api_v1.get('/posts/:id/comments')
+def get_post_comments(req: Request, res: Response):
+    post_id = req.params['id']
+    comments = get_comments_for_post(post_id)
+    return res.json(comments)
+
+# Start the server
+if __name__ == '__main__':
+    app.listen(port=3000)
+```
+
+## Core Framework Architecture
+
+```python
+import re
+import json
+import urllib.parse
+from typing import Dict, List, Callable, Any, Optional
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+class Request:
+    def __init__(self, method: str, path: str, headers: Dict, body: bytes, query_params: Dict):
+        self.method = method
+        self.path = path
+        self.headers = headers
+        self.body = body
+        self.query_params = query_params
+        self.params = {}
+        self.user = None
+    
+    def json(self) -> Dict:
+        """Parse request body as JSON"""
+        try:
+            return json.loads(self.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return {}
+    
+    def form(self) -> Dict:
+        """Parse form data from request body"""
+        content_type = self.headers.get('content-type', '')
+        if 'application/x-www-form-urlencoded' in content_type:
+            return dict(urllib.parse.parse_qsl(self.body.decode('utf-8')))
+        return {}
+
+class Response:
+    def __init__(self):
+        self.status_code = 200
+        self.headers = {'Content-Type': 'application/json'}
+        self.body = ''
+    
+    def status(self, code: int) -> 'Response':
+        """Set response status code"""
+        self.status_code = code
+        return self
+    
+    def header(self, name: str, value: str) -> 'Response':
+        """Set response header"""
+        self.headers[name] = value
+        return self
+    
+    def json(self, data: Any) -> 'Response':
+        """Send JSON response"""
+        self.headers['Content-Type'] = 'application/json'
+        self.body = json.dumps(data)
+        return self
+    
+    def html(self, content: str) -> 'Response':
+        """Send HTML response"""
+        self.headers['Content-Type'] = 'text/html'
+        self.body = content
+        return self
+    
+    def text(self, content: str) -> 'Response':
+        """Send plain text response"""
+        self.headers['Content-Type'] = 'text/plain'
+        self.body = content
+        return self
+    
+    def send(self, content: str = '') -> 'Response':
+        """Send response with optional content"""
+        self.body = content
+        return self
+
+class Route:
+    def __init__(self, method: str, pattern: str, handler: Callable):
+        self.method = method
+        self.pattern = pattern
+        self.handler = handler
+        self.regex = self._compile_pattern(pattern)
+    
+    def _compile_pattern(self, pattern: str) -> re.Pattern:
+        """Convert route pattern to regex"""
+        # Replace :param with named capture groups
+        pattern = re.sub(r':(\w+)', r'(?P<\1>[^/]+)', pattern)
+        # Handle wildcards
+        pattern = re.sub(r'\*', r'.*', pattern)
+        return re.compile(f'^{pattern}$')
+    
+    def match(self, method: str, path: str) -> Optional[Dict]:
+        """Check if route matches request and extract parameters"""
+        if self.method != method and self.method != 'ALL':
+            return None
+        
+        match = self.regex.match(path)
+        if match:
+            return match.groupdict()
+        return None
+
+class App:
+    def __init__(self):
+        self.routes: List[Route] = []
+        self.middleware: List[Callable] = []
+        self.error_handlers: Dict[int, Callable] = {}
+    
+    def _add_route(self, method: str, pattern: str, handler: Callable):
+        """Add a route to the application"""
+        route = Route(method, pattern, handler)
+        self.routes.append(route)
+    
+    def get(self, pattern: str):
+        """Register GET route"""
+        def decorator(handler):
+            self._add_route('GET', pattern, handler)
+            return handler
+        return decorator
+    
+    def post(self, pattern: str):
+        """Register POST route"""
+        def decorator(handler):
+            self._add_route('POST', pattern, handler)
+            return handler
+        return decorator
+    
+    def put(self, pattern: str):
+        """Register PUT route"""
+        def decorator(handler):
+            self._add_route('PUT', pattern, handler)
+            return handler
+        return decorator
+    
+    def delete(self, pattern: str):
+        """Register DELETE route"""
+        def decorator(handler):
+            self._add_route('DELETE', pattern, handler)
+            return handler
+        return decorator
+    
+    def use(self, middleware_func: Callable):
+        """Add middleware function"""
+        self.middleware.append(middleware_func)
+    
+    def group(self, prefix: str) -> 'RouteGroup':
+        """Create route group with common prefix"""
+        return RouteGroup(self, prefix)
+    
+    def handle_request(self, method: str, path: str, headers: Dict, body: bytes) -> Response:
+        """Process incoming HTTP request"""
+        # Parse query parameters
+        if '?' in path:
+            path, query_string = path.split('?', 1)
+            query_params = dict(urllib.parse.parse_qsl(query_string))
+        else:
+            query_params = {}
+        
+        # Create request and response objects
+        request = Request(method, path, headers, body, query_params)
+        response = Response()
+        
+        # Find matching route
+        matched_route = None
+        for route in self.routes:
+            params = route.match(method, path)
+            if params is not None:
+                request.params = params
+                matched_route = route
+                break
+        
+        if not matched_route:
+            return self._handle_404(request, response)
+        
+        try:
+            # Execute middleware chain
+            return self._execute_middleware_chain(request, response, matched_route.handler)
+        except Exception as e:
+            return self._handle_error(e, request, response)
+    
+    def _execute_middleware_chain(self, request: Request, response: Response, final_handler: Callable):
+        """Execute middleware chain followed by route handler"""
+        middleware_index = 0
+        
+        def next_middleware():
+            nonlocal middleware_index
+            if middleware_index < len(self.middleware):
+                current_middleware = self.middleware[middleware_index]
+                middleware_index += 1
+                return current_middleware(request, response, next_middleware)
+            else:
+                return final_handler(request, response)
+        
+        return next_middleware()
+    
+    def _handle_404(self, request: Request, response: Response) -> Response:
+        """Handle 404 Not Found"""
+        return response.status(404).json({'error': 'Not Found'})
+    
+    def _handle_error(self, error: Exception, request: Request, response: Response) -> Response:
+        """Handle application errors"""
+        print(f"Error handling request: {error}")
+        return response.status(500).json({'error': 'Internal Server Error'})
+```
+
+## Implementation Steps
+
+1. **HTTP Request Processing**:
+   - Parse HTTP request line, headers, and body
+   - Extract method, path, query parameters
+   - Handle different content types (JSON, form data, multipart)
+   - Create convenient request abstraction
+
+2. **Routing System**:
+   - Implement pattern matching for routes
+   - Support path parameters and wildcards
+   - Route registration with method constraints
+   - Parameter extraction and validation
+
+3. **Middleware Architecture**:
+   - Implement middleware chain execution
+   - Support for before/after request processing
+   - Error handling middleware
+   - Short-circuiting middleware responses
+
+4. **Response Generation**:
+   - Response object with method chaining
+   - Support for different content types
+   - Header management and status codes
+   - Response streaming for large data
+
+5. **Server Integration**:
+   - HTTP server integration
+   - Request dispatching to framework
+   - Error handling and logging
+   - Development server features
+
+## Advanced Features
+
+```python
+# File upload handling
+@app.post('/upload')
+def upload_file(req: Request, res: Response):
+    if not req.files:
+        return res.status(400).json({'error': 'No file uploaded'})
+    
+    uploaded_file = req.files['file']
+    filename = save_uploaded_file(uploaded_file)
+    
+    return res.json({'filename': filename, 'size': uploaded_file.size})
+
+# Template rendering
+@app.get('/profile/:id')
+def user_profile(req: Request, res: Response):
+    user = get_user(req.params['id'])
+    return res.render('user_profile.html', user=user)
+
+# Database integration
+@app.get('/api/posts')
+async def get_posts(req: Request, res: Response):
+    page = int(req.query_params.get('page', 1))
+    posts = await Post.paginate(page=page, per_page=10)
+    return res.json({
+        'posts': [post.to_dict() for post in posts.items],
+        'total': posts.total,
+        'pages': posts.pages
+    })
+
+# WebSocket support
+@app.websocket('/ws/chat')
+def chat_websocket(ws):
+    while True:
+        message = ws.receive()
+        # Broadcast to all connected clients
+        broadcast_message(message)
+
+# Background tasks
+@app.post('/send-email')
+def send_email(req: Request, res: Response):
+    email_data = req.json()
+    
+    # Queue background task
+    app.add_background_task(send_email_async, email_data)
+    
+    return res.json({'status': 'Email queued'})
+```
+
+## Extra Credit
+
+Extend your REST API framework with these additional features:
+
+1. **Advanced Routing**:
+   - Route parameter validation with regex patterns
+   - Optional parameters and default values
+   - Route versioning and API versioning
+   - Automatic API documentation generation
+
+2. **Security Features**:
+   - CSRF protection middleware
+   - Rate limiting and throttling
+   - Request validation and sanitization
+   - Security headers middleware
+
+3. **Performance Optimization**:
+   - Response caching and ETag support
+   - Request/response compression
+   - Connection pooling for databases
+   - Async/await support for handlers
+
+4. **Development Tools**:
+   - Hot reloading during development
+   - Request/response logging and debugging
+   - Profiling and performance monitoring
+   - Error page templates
+
+5. **Testing Support**:
+   - Built-in test client for unit testing
+   - Mock request/response objects
+   - Test fixtures and factories
+   - Integration test helpers
+
+6. **Plugin System**:
+   - Plugin architecture for extensions
+   - Built-in plugins for common functionality
+   - Configuration management
+   - Environment-based settings
+
+7. **Production Features**:
+   - Application server integration (WSGI/ASGI)
+   - Health check endpoints
+   - Metrics and monitoring integration
+   - Graceful shutdown handling
+
+This challenge will teach you about web framework design, HTTP protocol handling, and the patterns that make web development frameworks powerful and easy to use. The skills learned here will make you a better web developer regardless of which framework you use in production.

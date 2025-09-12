@@ -1,0 +1,151 @@
+---
+title: Build Your Own ls Tool
+summary: Create a directory listing command-line tool. Learn about file system operations, directory traversal, and formatted output.
+skills:
+- File System Operations
+- Directory Traversal
+- Formatted Output
+- File Attributes
+difficulty: Beginner
+category: Command Line
+estimatedTime: 2-4 hours
+---
+
+This challenge is inspired by the `ls` command-line tool in Unix-like systems. The `ls` tool is essential for navigating and understanding file systems, displaying directory contents with various formatting and sorting options. By building your own version of `ls`, you'll learn about file system operations, metadata handling, and output formatting.
+
+## Table of Contents
+
+The `ls` command embodies several key Unix principles:
+
+- **Clarity**: Present information in a clean, readable format.
+- **Flexibility**: Support various display options for different use cases.
+- **Efficiency**: Handle large directories without performance issues.
+
+You can learn more about the original `ls` command by reading its manual page:
+
+```bash
+man ls
+```
+
+## The Challenge
+
+Your task is to create a command-line tool that lists the contents of directories with various formatting options. The tool should display file names, sizes, permissions, timestamps, and other metadata based on specified flags.
+
+## Supported Arguments
+
+Your tool should support the following command-line arguments:
+
+- `-l` or `--long`: Use long listing format showing detailed information
+- `-a` or `--all`: Show all files, including hidden files (starting with `.`)
+- `-h` or `--human-readable`: Display file sizes in human-readable format (KB, MB, GB)
+- `-t` or `--time`: Sort files by modification time (newest first)
+- `-r` or `--reverse`: Reverse the sort order
+- `-S` or `--size`: Sort files by size (largest first)
+- `-R` or `--recursive`: List subdirectories recursively
+- `-1` or `--format=single-column`: List one file per line
+
+When no directory is specified, list the current directory.
+
+## Example Usage
+
+Here's how your tool should work:
+
+```bash
+# List current directory
+$ ls
+Documents  Downloads  Pictures  file.txt
+
+# Long format listing
+$ ls -l
+drwxr-xr-x  5 user  staff  160 Jan 15 10:30 Documents
+drwxr-xr-x  3 user  staff   96 Jan 14 15:20 Downloads
+drwxr-xr-x  2 user  staff   64 Jan 10 09:15 Pictures
+-rw-r--r--  1 user  staff 1024 Jan 16 14:45 file.txt
+
+# Show all files including hidden
+$ ls -la
+total 8
+drwxr-xr-x  6 user  staff  192 Jan 16 14:45 .
+drwxr-xr-x  4 user  staff  128 Jan 15 10:00 ..
+-rw-r--r--  1 user  staff   21 Jan 14 12:00 .hidden
+drwxr-xr-x  5 user  staff  160 Jan 15 10:30 Documents
+
+# Human-readable file sizes
+$ ls -lh
+drwxr-xr-x  5 user  staff  160B Jan 15 10:30 Documents
+-rw-r--r--  1 user  staff  1.0K Jan 16 14:45 file.txt
+
+# Sort by time (newest first)
+$ ls -lt
+-rw-r--r--  1 user  staff 1024 Jan 16 14:45 file.txt
+drwxr-xr-x  5 user  staff  160 Jan 15 10:30 Documents
+drwxr-xr-x  3 user  staff   96 Jan 14 15:20 Downloads
+
+# Recursive listing
+$ ls -R
+.:
+Documents  file.txt
+
+./Documents:
+project1  project2
+```
+
+## Implementation Steps
+
+1. **Directory Reading**:
+   - Use your language's directory reading functions to list files
+   - Handle permission errors gracefully
+   - Filter hidden files based on options
+
+2. **File Metadata**:
+   - Retrieve file size, modification time, permissions, and owner information
+   - Handle symbolic links and special files appropriately
+   - Calculate total sizes for directories if needed
+
+3. **Formatting and Display**:
+   - Implement columnar output for default view
+   - Create detailed long format with aligned columns
+   - Convert file sizes to human-readable format
+   - Format timestamps consistently
+
+4. **Sorting and Filtering**:
+   - Implement different sorting algorithms (name, time, size)
+   - Support reverse sorting
+   - Handle case-sensitive vs case-insensitive sorting
+
+5. **Recursive Traversal**:
+   - Implement directory tree traversal
+   - Handle circular references and deep directory structures
+   - Format recursive output clearly
+
+## Extra Credit
+
+Extend your `ls` implementation with these additional features:
+
+1. **Advanced Display Options**:
+   - `-i` to show inode numbers
+   - `-F` to classify files with indicators (`/` for directories, `*` for executables)
+   - `--color` to colorize output based on file types
+
+2. **Enhanced Sorting**:
+   - `-X` to sort alphabetically by file extension
+   - `-v` to sort naturally (handle numbers in filenames correctly)
+   - Custom sort orders
+
+3. **Performance Optimization**:
+   - Implement efficient sorting algorithms for large directories
+   - Add parallel processing for recursive operations
+   - Optimize memory usage for very large directories
+
+4. **Cross-Platform Support**:
+   - Handle different file system types and permissions
+   - Support Windows-style attributes and permissions
+   - Adapt to different terminal capabilities
+
+5. **Advanced Features**:
+   - Implement glob pattern matching for file filtering
+   - Add support for multiple directory arguments
+   - Show file type detection and MIME types
+   - Display file checksums or other metadata
+
+This challenge will teach you fundamental file system operations and give you a deeper appreciation for the complexity behind seemingly simple command-line tools.

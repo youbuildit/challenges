@@ -1,0 +1,502 @@
+---
+title: Build Your Own Memory Allocator
+summary: Create a custom memory allocator with efficient allocation and deallocation. Learn about memory management, heap algorithms, and system programming.
+skills:
+- Memory Management
+- System Programming
+- Algorithms
+- Performance Optimization
+difficulty: Advanced
+category: Systems Programming
+estimatedTime: 8-10 hours
+---
+
+This challenge is inspired by memory allocators like malloc/free, which are fundamental to systems programming. Memory allocators manage heap memory, providing efficient allocation and deallocation while minimizing fragmentation. By building your own memory allocator, you'll learn about low-level memory management, heap algorithms, and the trade-offs between speed, memory usage, and fragmentation.
+
+## Table of Contents
+
+Memory allocators demonstrate several important systems programming concepts:
+
+- **Heap Management**: Efficiently manage large blocks of memory from the operating system.
+- **Fragmentation Control**: Minimize internal and external fragmentation.
+- **Performance Optimization**: Balance allocation speed with memory efficiency.
+- **Coalescing and Splitting**: Merge adjacent free blocks and split large blocks as needed.
+
+Understanding memory allocation is crucial for systems programming and helps you write more efficient applications.
+
+## The Challenge
+
+Your task is to implement a memory allocator that can efficiently allocate and deallocate memory blocks of varying sizes. The allocator should minimize fragmentation, provide good performance, and handle edge cases gracefully.
+
+## Core Features
+
+Your memory allocator should support:
+
+1. **Basic Operations**:
+   - `malloc(size)` - Allocate memory block of specified size
+   - `free(ptr)` - Deallocate previously allocated memory
+   - `realloc(ptr, size)` - Resize existing allocation
+   - `calloc(num, size)` - Allocate and zero-initialize memory
+
+2. **Memory Management**:
+   - Request memory from OS using system calls (sbrk, mmap)
+   - Maintain free list of available blocks
+   - Coalesce adjacent free blocks to reduce fragmentation
+   - Split large blocks to satisfy smaller requests
+
+3. **Performance Optimizations**:
+   - Fast allocation and deallocation (O(1) or O(log n))
+   - Low memory overhead per allocation
+   - Good cache locality for allocated blocks
+   - Minimal system call overhead
+
+## Example Usage
+
+Here's how your memory allocator should work:
+
+```c
+#include "my_allocator.h"
+
+int main() {
+    // Initialize allocator
+    init_allocator();
+    
+    // Basic allocation
+    void* ptr1 = my_malloc(64);
+    void* ptr2 = my_malloc(128);
+    void* ptr3 = my_malloc(256);
+    
+    printf("Allocated: ptr1=%p, ptr2=%p, ptr3=%p\n", ptr1, ptr2, ptr3);
+    
+    // Free some memory
+    my_free(ptr2);
+    
+    // Allocate again - should reuse freed block if possible
+    void* ptr4 = my_malloc(100);
+    printf("Reused block: ptr4=%p\n", ptr4);
+    
+    // Reallocate
+    ptr1 = my_realloc(ptr1, 128);
+    printf("Reallocated: ptr1=%p\n", ptr1);
+    
+    // Allocate zero-initialized memory
+    int* array = (int*)my_calloc(10, sizeof(int));
+    for (int i = 0; i < 10; i++) {
+        printf("array[%d] = %d\n", i, array[i]); // Should be 0
+    }
+    
+    // Clean up
+    my_free(ptr1);
+    my_free(ptr3);
+    my_free(ptr4);
+    my_free(array);
+    
+    // Print allocator statistics
+    print_allocator_stats();
+    
+    return 0;
+}
+```
+
+## Allocator Implementation
+
+```c
+#include <stddef.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <sys/mman.h>
+
+// Block header structure
+typedef struct block {
+    size_t size;           // Size of the block (excluding header)
+    int is_free;           // 1 if block is free, 0 if allocated
+    struct block* next;    // Pointer to next block in free list
+    struct block* prev;    // Pointer to previous block in free list
+} block_t;
+
+// Allocator state
+typedef struct {
+    block_t* free_list_head;    // Head of free list
+    void* heap_start;           // Start of heap memory
+    size_t heap_size;           // Total heap size
+    size_t total_allocated;     // Total bytes allocated
+    size_t total_freed;         // Total bytes freed
+    int num_allocations;        // Number of active allocations
+} allocator_t;
+
+static allocator_t allocator = {0};
+
+// Minimum allocation size and alignment
+#define MIN_BLOCK_SIZE 16
+#define ALIGNMENT 8
+#define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~(ALIGNMENT-1))
+
+// Calculate header size
+#define HEADER_SIZE sizeof(block_t)
+
+void init_allocator() {
+    allocator.free_list_head = NULL;
+    allocator.heap_start = NULL;
+    allocator.heap_size = 0;
+    allocator.total_allocated = 0;
+    allocator.total_freed = 0;
+    allocator.num_allocations = 0;
+}
+
+// Request memory from OS
+static void* request_memory(size_t size) {
+    void* ptr;
+    
+    // Use mmap for large allocations
+    if (size >= 4096) {
+        ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, 
+                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        if (ptr == MAP_FAILED) {
+            return NULL;
+        }
+    } else {
+        // Use sbrk for small allocations
+        ptr = sbrk(size);
+        if (ptr == (void*)-1) {
+            return NULL;
+        }
+    }
+    
+    if (allocator.heap_start == NULL) {
+        allocator.heap_start = ptr;
+    }
+    allocator.heap_size += size;
+    
+    return ptr;
+}
+
+// Find free block that fits the requested size
+static block_t* find_free_block(size_t size) {
+    block_t* current = allocator.free_list_head;
+    
+    // First-fit strategy
+    while (current != NULL) {
+        if (current->is_free && current->size >= size) {
+            return current;
+        }
+        current = current->next;
+    }
+    
+    return NULL;
+}
+
+// Split block if it's significantly larger than needed
+static void split_block(block_t* block, size_t size) {
+    if (block->size < size + HEADER_SIZE + MIN_BLOCK_SIZE) {
+        // Block is too small to split
+        return;
+    }
+    
+    // Create new block from remaining space
+    block_t* new_block = (block_t*)((char*)block + HEADER_SIZE + size);
+    new_block->size = block->size - size - HEADER_SIZE;
+    new_block->is_free = 1;
+    new_block->next = block->next;
+    new_block->prev = block;
+    
+    if (block->next) {
+        block->next->prev = new_block;
+    }
+    block->next = new_block;
+    
+    // Update original block
+    block->size = size;
+}
+
+// Coalesce adjacent free blocks
+static void coalesce_blocks(block_t* block) {
+    // Coalesce with next block
+    while (block->next && block->next->is_free) {
+        block_t* next_block = block->next;
+        block->size += HEADER_SIZE + next_block->size;
+        block->next = next_block->next;
+        if (next_block->next) {
+            next_block->next->prev = block;
+        }
+    }
+    
+    // Coalesce with previous block
+    if (block->prev && block->prev->is_free) {
+        block_t* prev_block = block->prev;
+        prev_block->size += HEADER_SIZE + block->size;
+        prev_block->next = block->next;
+        if (block->next) {
+            block->next->prev = prev_block;
+        }
+    }
+}
+
+void* my_malloc(size_t size) {
+    if (size == 0) {
+        return NULL;
+    }
+    
+    // Align size
+    size = ALIGN(size);
+    
+    // Find free block
+    block_t* block = find_free_block(size);
+    
+    if (block == NULL) {
+        // No suitable free block found, request more memory
+        size_t request_size = size + HEADER_SIZE;
+        if (request_size < 4096) {
+            request_size = 4096; // Request at least one page
+        }
+        
+        block = (block_t*)request_memory(request_size);
+        if (block == NULL) {
+            return NULL;
+        }
+        
+        block->size = request_size - HEADER_SIZE;
+        block->is_free = 1;
+        block->next = allocator.free_list_head;
+        block->prev = NULL;
+        
+        if (allocator.free_list_head) {
+            allocator.free_list_head->prev = block;
+        }
+        allocator.free_list_head = block;
+    }
+    
+    // Split block if necessary
+    split_block(block, size);
+    
+    // Mark block as allocated
+    block->is_free = 0;
+    
+    // Update statistics
+    allocator.total_allocated += size;
+    allocator.num_allocations++;
+    
+    // Return pointer to data (after header)
+    return (char*)block + HEADER_SIZE;
+}
+
+void my_free(void* ptr) {
+    if (ptr == NULL) {
+        return;
+    }
+    
+    // Get block header
+    block_t* block = (block_t*)((char*)ptr - HEADER_SIZE);
+    
+    // Mark as free
+    block->is_free = 1;
+    
+    // Update statistics
+    allocator.total_freed += block->size;
+    allocator.num_allocations--;
+    
+    // Coalesce with adjacent free blocks
+    coalesce_blocks(block);
+}
+
+void* my_realloc(void* ptr, size_t size) {
+    if (ptr == NULL) {
+        return my_malloc(size);
+    }
+    
+    if (size == 0) {
+        my_free(ptr);
+        return NULL;
+    }
+    
+    block_t* block = (block_t*)((char*)ptr - HEADER_SIZE);
+    size = ALIGN(size);
+    
+    if (block->size >= size) {
+        // Current block is large enough
+        split_block(block, size);
+        return ptr;
+    }
+    
+    // Need to allocate new block
+    void* new_ptr = my_malloc(size);
+    if (new_ptr == NULL) {
+        return NULL;
+    }
+    
+    // Copy data from old block
+    size_t copy_size = block->size < size ? block->size : size;
+    memcpy(new_ptr, ptr, copy_size);
+    
+    // Free old block
+    my_free(ptr);
+    
+    return new_ptr;
+}
+
+void* my_calloc(size_t num, size_t size) {
+    size_t total_size = num * size;
+    
+    // Check for overflow
+    if (num != 0 && total_size / num != size) {
+        return NULL;
+    }
+    
+    void* ptr = my_malloc(total_size);
+    if (ptr != NULL) {
+        memset(ptr, 0, total_size);
+    }
+    
+    return ptr;
+}
+```
+
+## Implementation Steps
+
+1. **Basic Data Structures**:
+   - Design block header with size and free status
+   - Implement free list to track available blocks
+   - Handle block splitting and coalescing
+
+2. **System Memory Management**:
+   - Use sbrk() or mmap() to request memory from OS
+   - Manage heap growth and memory mapping
+   - Handle large allocation requests separately
+
+3. **Allocation Algorithms**:
+   - Implement first-fit, best-fit, or worst-fit strategies
+   - Add block splitting for efficient memory use
+   - Optimize for common allocation patterns
+
+4. **Deallocation and Coalescing**:
+   - Merge adjacent free blocks to prevent fragmentation
+   - Maintain free list consistency
+   - Handle boundary conditions and edge cases
+
+5. **Performance Optimizations**:
+   - Implement fast free list search
+   - Add size classes for common allocation sizes
+   - Use memory pools for specific allocation patterns
+
+## Advanced Allocator Features
+
+```c
+// Size class allocator for small objects
+#define NUM_SIZE_CLASSES 8
+static block_t* size_class_free_lists[NUM_SIZE_CLASSES];
+static const size_t size_classes[] = {8, 16, 32, 64, 128, 256, 512, 1024};
+
+static int get_size_class(size_t size) {
+    for (int i = 0; i < NUM_SIZE_CLASSES; i++) {
+        if (size <= size_classes[i]) {
+            return i;
+        }
+    }
+    return -1; // Large allocation
+}
+
+// Thread-safe allocator
+#include <pthread.h>
+static pthread_mutex_t allocator_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void* thread_safe_malloc(size_t size) {
+    pthread_mutex_lock(&allocator_mutex);
+    void* result = my_malloc(size);
+    pthread_mutex_unlock(&allocator_mutex);
+    return result;
+}
+
+// Memory debugging features
+#ifdef DEBUG_ALLOCATOR
+#define MAGIC_ALLOC 0xDEADBEEF
+#define MAGIC_FREE  0xFEEDFACE
+
+typedef struct debug_block {
+    uint32_t magic;
+    size_t size;
+    const char* file;
+    int line;
+    struct debug_block* next;
+} debug_block_t;
+
+#define DEBUG_MALLOC(size) debug_malloc(size, __FILE__, __LINE__)
+#define DEBUG_FREE(ptr) debug_free(ptr, __FILE__, __LINE__)
+#endif
+
+// Statistics and monitoring
+typedef struct allocator_stats {
+    size_t total_allocated;
+    size_t total_freed;
+    size_t peak_usage;
+    size_t current_usage;
+    int num_allocations;
+    int num_frees;
+    double fragmentation_ratio;
+} allocator_stats_t;
+
+void get_allocator_stats(allocator_stats_t* stats) {
+    stats->total_allocated = allocator.total_allocated;
+    stats->total_freed = allocator.total_freed;
+    stats->current_usage = allocator.total_allocated - allocator.total_freed;
+    stats->num_allocations = allocator.num_allocations;
+    
+    // Calculate fragmentation
+    size_t free_space = 0;
+    size_t largest_free = 0;
+    block_t* current = allocator.free_list_head;
+    
+    while (current) {
+        if (current->is_free) {
+            free_space += current->size;
+            if (current->size > largest_free) {
+                largest_free = current->size;
+            }
+        }
+        current = current->next;
+    }
+    
+    stats->fragmentation_ratio = free_space > 0 ? 
+        (double)largest_free / free_space : 0.0;
+}
+```
+
+## Extra Credit
+
+Extend your memory allocator with these additional features:
+
+1. **Advanced Allocation Strategies**:
+   - Implement best-fit and worst-fit allocation
+   - Add segregated free lists for different size classes
+   - Implement buddy allocation system
+   - Add memory pools for specific object types
+
+2. **Performance Optimizations**:
+   - Thread-local allocators to reduce contention
+   - Lock-free data structures for concurrent access
+   - Cache-aware allocation to improve locality
+   - Profile-guided optimization for allocation patterns
+
+3. **Memory Safety and Debugging**:
+   - Add heap corruption detection
+   - Implement memory leak detection
+   - Add bounds checking for allocated blocks
+   - Support for valgrind integration
+
+4. **Advanced Memory Management**:
+   - Implement garbage collection support
+   - Add memory compaction to reduce fragmentation
+   - Support for memory-mapped allocations
+   - NUMA-aware allocation for multi-socket systems
+
+5. **Specialized Allocators**:
+   - Stack allocator for LIFO allocation patterns
+   - Ring buffer allocator for streaming data
+   - Object pool allocator for fixed-size objects
+   - Slab allocator for kernel-style allocation
+
+6. **System Integration**:
+   - Replace system malloc with LD_PRELOAD
+   - Integration with operating system memory management
+   - Support for memory pressure notifications
+   - Cooperation with virtual memory subsystem
+
+This challenge will give you deep insights into memory management, system programming, and the performance trade-offs involved in low-level resource allocation. These skills are crucial for systems programming and performance-critical applications.

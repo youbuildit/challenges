@@ -1,0 +1,200 @@
+---
+title: Build Your Own awk Tool
+summary: Create a pattern-scanning and data extraction language. Learn about text parsing, pattern-action programming, and field processing.
+skills:
+- Text Processing
+- Pattern Matching
+- Programming Languages
+- Field Parsing
+difficulty: Advanced
+category: Text Processing
+estimatedTime: 8-10 hours
+---
+
+This challenge is inspired by the `awk` programming language and command-line tool in Unix-like systems. AWK is a powerful pattern-scanning and data extraction language that processes text files line by line, splitting each line into fields and executing actions based on patterns. By building your own version of `awk`, you'll learn about interpreter design, text processing, and domain-specific languages.
+
+## Table of Contents
+
+AWK demonstrates several important programming language concepts:
+
+- **Pattern-Action Model**: Execute code blocks based on pattern matching.
+- **Built-in Variables**: Provide context and state information automatically.
+- **Field Processing**: Automatically split input into fields for easy manipulation.
+- **Text Processing**: Combine programming constructs with text manipulation.
+
+You can learn more about the original `awk` language by reading its manual page:
+
+```bash
+man awk
+```
+
+## The Challenge
+
+Your task is to implement a simplified AWK interpreter that can process text files using pattern-action rules. The tool should support field splitting, built-in variables, basic programming constructs, and pattern matching.
+
+## Core Features
+
+Your AWK implementation should support:
+
+1. **Pattern-Action Structure**: `pattern { action }`
+2. **Built-in Variables**:
+   - `NR` - Current record (line) number
+   - `NF` - Number of fields in current record
+   - `$0` - Entire current record
+   - `$1, $2, ...` - Individual fields
+   - `FS` - Field separator (default: whitespace)
+   - `RS` - Record separator (default: newline)
+   - `OFS` - Output field separator (default: space)
+   - `ORS` - Output record separator (default: newline)
+
+3. **Built-in Functions**:
+   - `print` - Print arguments or current record
+   - `printf` - Formatted printing
+   - `length(string)` - String length
+   - `substr(string, start, length)` - Substring
+   - `split(string, array, separator)` - Split string into array
+
+4. **Programming Constructs**:
+   - Variables and assignments
+   - Arithmetic operations
+   - String operations
+   - Conditional statements (`if`, `else`)
+   - Loops (`for`, `while`)
+
+## Example Usage
+
+Here's how your AWK tool should work:
+
+```bash
+# Print specific fields
+$ awk '{print $1, $3}' file.txt
+
+# Pattern matching
+$ awk '/error/ {print NR, $0}' logfile.txt
+
+# Field counting
+$ awk '{print NF}' file.txt
+
+# Conditional processing
+$ awk 'NR > 1 {print "Line " NR ": " $0}' file.txt
+
+# BEGIN and END patterns
+$ awk 'BEGIN {print "Processing file..."} {count++} END {print "Total lines:", count}' file.txt
+
+# Field separator customization
+$ awk -F: '{print $1, $6}' /etc/passwd
+
+# Mathematical operations
+$ awk '{sum += $1} END {print "Sum:", sum}' numbers.txt
+
+# String operations
+$ awk '{print length($0)}' file.txt
+
+# Conditional statements
+$ awk '{if ($1 > 100) print $0 " is large"}' numbers.txt
+
+# Multiple patterns and actions
+$ awk '/start/ {flag=1} flag==1 {print} /end/ {flag=0}' file.txt
+```
+
+## Implementation Steps
+
+1. **Lexical Analysis**:
+   - Tokenize AWK source code into keywords, operators, strings, numbers
+   - Handle different token types (patterns, actions, expressions)
+   - Support string literals and regular expression literals
+
+2. **Parsing**:
+   - Build an Abstract Syntax Tree (AST) from tokens
+   - Parse pattern-action rules
+   - Handle programming constructs (if, while, for)
+   - Parse expressions and function calls
+
+3. **Built-in Variables**:
+   - Implement automatic field splitting
+   - Maintain record and field count variables
+   - Support configurable field and record separators
+   - Handle field assignment and modification
+
+4. **Pattern Matching**:
+   - Implement regex pattern matching
+   - Support BEGIN and END special patterns
+   - Handle numeric range patterns
+   - Support pattern combinations
+
+5. **Action Execution**:
+   - Implement variable storage and retrieval
+   - Execute arithmetic and string operations
+   - Handle built-in functions
+   - Support control flow statements
+
+## Advanced AWK Features
+
+```bash
+# Arrays (associative)
+$ awk '{count[$1]++} END {for (word in count) print word, count[word]}' file.txt
+
+# Multiple field separators
+$ awk -F'[,:]' '{print $2}' file.txt
+
+# Regular expression matching
+$ awk '$0 ~ /pattern/ {print}' file.txt
+
+# String functions
+$ awk '{print toupper($1)}' file.txt
+
+# Mathematical functions
+$ awk '{print sqrt($1)}' numbers.txt
+
+# File processing
+$ awk '{print > "output_" NR ".txt"}' input.txt
+```
+
+## Extra Credit
+
+Extend your AWK implementation with these additional features:
+
+1. **Advanced Data Types**:
+   - Associative arrays with proper iteration
+   - Multi-dimensional arrays
+   - Automatic string-number conversion
+   - Type coercion rules
+
+2. **Enhanced Built-in Functions**:
+   - `toupper()`, `tolower()` - Case conversion
+   - `gsub()`, `sub()` - Global/single substitution
+   - `match()` - Pattern matching with position
+   - `sprintf()` - String formatting
+   - Mathematical functions (`sin`, `cos`, `sqrt`, etc.)
+
+3. **Advanced Pattern Matching**:
+   - Range patterns (`/start/,/end/`)
+   - Compound patterns with logical operators
+   - Field-specific patterns (`$1 ~ /pattern/`)
+   - Numeric comparison patterns
+
+4. **File I/O and System Integration**:
+   - Multiple input files with `FILENAME` variable
+   - Output redirection (`print > "file"`)
+   - Pipe output to commands (`print | "command"`)
+   - Command execution with `system()`
+
+5. **Performance Optimizations**:
+   - Optimize field splitting for different separators
+   - Implement efficient associative array structures
+   - Cache compiled regular expressions
+   - Add memory management for large datasets
+
+6. **Error Handling and Debugging**:
+   - Comprehensive syntax error reporting
+   - Runtime error handling
+   - Debug mode with step-by-step execution
+   - Variable inspection capabilities
+
+7. **Extended Language Features**:
+   - User-defined functions
+   - Local variables and scope
+   - Return statements
+   - Function libraries
+
+This challenge will give you deep insights into language design, text processing algorithms, and the elegant simplicity that makes AWK so powerful for data manipulation tasks.

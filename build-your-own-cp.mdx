@@ -1,0 +1,175 @@
+---
+title: Build Your Own cp Tool
+summary: Create a file and directory copying utility. Learn about file I/O operations, directory traversal, and preserving file attributes.
+skills:
+- File I/O
+- Directory Operations
+- File Attributes
+- Error Handling
+difficulty: Intermediate
+category: Command Line
+estimatedTime: 3-5 hours
+---
+
+This challenge is inspired by the `cp` command-line tool in Unix-like systems. The `cp` tool is fundamental for file management, allowing you to copy files and directories while preserving various attributes. By building your own version of `cp`, you'll learn about efficient file I/O, metadata preservation, and robust error handling.
+
+## Table of Contents
+
+The `cp` command demonstrates important system programming concepts:
+
+- **Data Integrity**: Ensure copied files are identical to originals.
+- **Efficiency**: Handle large files and directory trees efficiently.
+- **Preservation**: Maintain file attributes, permissions, and timestamps when requested.
+
+You can learn more about the original `cp` command by reading its manual page:
+
+```bash
+man cp
+```
+
+## The Challenge
+
+Your task is to create a command-line tool that copies files and directories from source to destination locations. The tool should handle various copying scenarios, preserve file attributes when requested, and provide robust error handling.
+
+## Supported Arguments
+
+Your tool should support the following command-line arguments:
+
+- `-r` or `--recursive`: Copy directories recursively
+- `-p` or `--preserve`: Preserve file attributes (timestamps, permissions, ownership)
+- `-f` or `--force`: Force copy by removing existing destination files
+- `-i` or `--interactive`: Prompt before overwriting existing files
+- `-v` or `--verbose`: Show files as they are being copied
+- `-n` or `--no-clobber`: Do not overwrite existing files
+- `-u` or `--update`: Copy only when source is newer than destination
+- `-L` or `--dereference`: Follow symbolic links
+
+## Example Usage
+
+Here's how your tool should work:
+
+```bash
+# Copy a single file
+$ cp source.txt destination.txt
+
+# Copy file to directory
+$ cp file.txt /home/user/documents/
+
+# Copy multiple files to directory
+$ cp file1.txt file2.txt file3.txt /home/user/backup/
+
+# Copy directory recursively
+$ cp -r source_directory/ destination_directory/
+
+# Copy with preservation of attributes
+$ cp -rp /etc/config/ /backup/config/
+
+# Interactive copying
+$ cp -i important.txt backup.txt
+cp: overwrite 'backup.txt'? y
+
+# Verbose copying
+$ cp -rv project/ backup/
+'project/main.c' -> 'backup/main.c'
+'project/Makefile' -> 'backup/Makefile'
+'project/src/utils.c' -> 'backup/src/utils.c'
+
+# Update only newer files
+$ cp -ru source/ destination/
+
+# Force overwrite
+$ cp -f readonly.txt destination.txt
+```
+
+## Implementation Steps
+
+1. **Argument Parsing**:
+   - Parse command-line options and file paths
+   - Validate that source files exist and are accessible
+   - Determine whether destination is a file or directory
+
+2. **File Copying Logic**:
+   - Implement efficient file copying using buffered I/O
+   - Handle different file types (regular files, directories, symlinks)
+   - Detect and handle special cases (copying to self, circular references)
+
+3. **Directory Operations**:
+   - Implement recursive directory traversal
+   - Create destination directory structure as needed
+   - Handle directory permissions and ownership
+
+4. **Attribute Preservation**:
+   - Preserve file timestamps (access time, modification time)
+   - Copy file permissions and ownership when possible
+   - Handle extended attributes and ACLs if supported
+
+5. **Error Handling**:
+   - Provide clear error messages for different failure scenarios
+   - Handle permission denied, disk full, and other I/O errors
+   - Continue processing other files when one file fails
+
+## Example File Operations
+
+```bash
+# Basic file copy with error handling
+if source_file.exists() and source_file.readable():
+    try:
+        copy_file_contents(source_file, destination_file)
+        if preserve_attributes:
+            copy_timestamps(source_file, destination_file)
+            copy_permissions(source_file, destination_file)
+    except IOError as e:
+        print(f"Error copying {source_file}: {e}")
+
+# Directory tree traversal
+def copy_directory_recursive(src_dir, dst_dir):
+    create_directory(dst_dir)
+    for item in list_directory(src_dir):
+        src_path = join_path(src_dir, item)
+        dst_path = join_path(dst_dir, item)
+        
+        if is_directory(src_path):
+            copy_directory_recursive(src_path, dst_path)
+        else:
+            copy_file(src_path, dst_path)
+```
+
+## Extra Credit
+
+Extend your `cp` implementation with these additional features:
+
+1. **Advanced Options**:
+   - `-a` or `--archive`: Equivalent to `-rpP` (preserve all attributes)
+   - `-s` or `--symbolic-link`: Create symbolic links instead of copying
+   - `-l` or `--link`: Create hard links instead of copying
+   - `--sparse`: Handle sparse files efficiently
+
+2. **Progress and Performance**:
+   - Show progress bar for large file operations
+   - Implement parallel copying for multiple files
+   - Add bandwidth throttling options
+   - Optimize for different storage types (SSD vs HDD)
+
+3. **Advanced Attribute Handling**:
+   - Support for extended attributes (xattrs)
+   - Handle Access Control Lists (ACLs)
+   - Preserve file capabilities on Linux
+   - Handle resource forks on macOS
+
+4. **Backup and Versioning**:
+   - `--backup` to create backups of overwritten files
+   - Support for numbered backups
+   - Integration with version control systems
+
+5. **Cross-Platform Support**:
+   - Handle different path separators and naming conventions
+   - Support Windows file attributes and permissions
+   - Deal with different file system limitations
+
+6. **Safety Features**:
+   - Implement checksum verification for copied files
+   - Add dry-run mode to preview operations
+   - Support for copying file hierarchies across different file systems
+   - Handle FIFO, device files, and other special file types
+
+This challenge will give you deep insights into file system operations, data integrity, and the complexities involved in what seems like a simple file copying operation.

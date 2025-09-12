@@ -1,0 +1,327 @@
+---
+title: Build Your Own DNS Resolver
+summary: Create a Domain Name System resolver that translates hostnames to IP addresses. Learn about DNS protocols, packet parsing, and recursive queries.
+skills:
+- Network Programming
+- DNS Protocol
+- Packet Parsing
+- UDP Sockets
+difficulty: Advanced
+category: Networking
+estimatedTime: 6-8 hours
+---
+
+This challenge is inspired by DNS (Domain Name System) resolvers, the fundamental infrastructure that translates human-readable domain names into IP addresses. DNS is one of the most critical Internet protocols, enabling the web as we know it to function. By building your own DNS resolver, you'll learn about network protocols, packet parsing, and the hierarchical nature of Internet naming.
+
+## Table of Contents
+
+DNS resolution demonstrates several important networking and systems concepts:
+
+- **Protocol Implementation**: Build packets according to RFC specifications.
+- **Recursive Queries**: Navigate the hierarchical DNS system from root to authoritative servers.
+- **Caching Strategies**: Implement efficient caching to reduce query times and network load.
+- **UDP Communication**: Handle unreliable transport with timeouts and retries.
+
+Understanding DNS is crucial for network programming and helps explain how the Internet's naming system operates at a fundamental level.
+
+## The Challenge
+
+Your task is to create a DNS resolver that can translate domain names to IP addresses by querying DNS servers directly. The resolver should handle different record types, implement caching, and support both recursive and iterative queries.
+
+## DNS Protocol Basics
+
+Your DNS resolver should understand the core DNS protocol:
+
+1. **DNS Message Structure**:
+   - Header: ID, flags, question/answer/authority/additional counts
+   - Question section: Domain name, query type, query class
+   - Answer section: Resource records with TTL values
+   - Authority and Additional sections for delegation and optimization
+
+2. **Common Record Types**:
+   - A: IPv4 address
+   - AAAA: IPv6 address
+   - CNAME: Canonical name (alias)
+   - MX: Mail exchange
+   - NS: Name server
+   - TXT: Text records
+   - PTR: Reverse DNS lookup
+
+3. **Query Process**:
+   - Start with root name servers (.)
+   - Follow NS records down the hierarchy
+   - Cache responses with TTL-based expiration
+   - Handle CNAME redirections
+
+## Supported Features
+
+Your DNS resolver should support:
+
+1. **Basic Resolution**:
+   - Resolve A records (IPv4 addresses)
+   - Handle CNAME aliases and chains
+   - Support multiple IP addresses per hostname
+   - Implement proper error handling for NXDOMAIN
+
+2. **Advanced Query Types**:
+   - AAAA records for IPv6
+   - MX records for mail servers
+   - TXT records for domain verification
+   - NS records for nameserver information
+
+3. **Caching and Performance**:
+   - TTL-based cache management
+   - Negative caching for non-existent domains
+   - Cache statistics and management
+   - Configurable cache size limits
+
+## Example Usage
+
+Here's how your DNS resolver should work:
+
+```python
+# Basic hostname resolution
+resolver = DNSResolver()
+ip_addresses = resolver.resolve("google.com", "A")
+print(ip_addresses)  # ['142.250.184.14', '142.250.184.46', ...]
+
+# IPv6 resolution
+ipv6_addresses = resolver.resolve("google.com", "AAAA")
+print(ipv6_addresses)  # ['2607:f8b0:4004:c07::71', ...]
+
+# Mail server lookup
+mx_records = resolver.resolve("gmail.com", "MX")
+for priority, server in mx_records:
+    print(f"Priority {priority}: {server}")
+
+# Text records
+txt_records = resolver.resolve("_dmarc.google.com", "TXT")
+print(txt_records)  # ['v=DMARC1; p=quarantine; ...']
+
+# Reverse DNS lookup
+hostname = resolver.reverse_lookup("8.8.8.8")
+print(hostname)  # dns.google.
+
+# With caching
+resolver = DNSResolver(cache_enabled=True, cache_ttl_max=3600)
+start_time = time.time()
+resolver.resolve("example.com", "A")
+first_query_time = time.time() - start_time
+
+start_time = time.time()
+resolver.resolve("example.com", "A")  # Should be much faster
+cached_query_time = time.time() - start_time
+
+print(f"First query: {first_query_time:.3f}s")
+print(f"Cached query: {cached_query_time:.3f}s")
+```
+
+## DNS Message Format
+
+Your resolver should construct and parse DNS messages:
+
+```python
+import struct
+
+class DNSHeader:
+    def __init__(self, id, flags=0x0100):  # Standard query with recursion desired
+        self.id = id
+        self.flags = flags
+        self.qdcount = 0  # Questions
+        self.ancount = 0  # Answers
+        self.nscount = 0  # Authority RRs
+        self.arcount = 0  # Additional RRs
+    
+    def pack(self):
+        return struct.pack('!HHHHHH', 
+                          self.id, self.flags, self.qdcount,
+                          self.ancount, self.nscount, self.arcount)
+
+class DNSQuestion:
+    def __init__(self, name, qtype=1, qclass=1):  # A record, IN class
+        self.name = name
+        self.qtype = qtype
+        self.qclass = qclass
+    
+    def pack(self):
+        # Encode domain name with length-prefixed labels
+        labels = self.name.split('.')
+        encoded_name = b''
+        for label in labels:
+            if label:  # Skip empty label at end
+                encoded_name += bytes([len(label)]) + label.encode('ascii')
+        encoded_name += b'\x00'  # Null terminator
+        
+        return encoded_name + struct.pack('!HH', self.qtype, self.qclass)
+
+def create_dns_query(domain, record_type='A'):
+    query_id = random.randint(1, 65535)
+    header = DNSHeader(query_id)
+    header.qdcount = 1
+    
+    type_map = {'A': 1, 'NS': 2, 'CNAME': 5, 'MX': 15, 'TXT': 16, 'AAAA': 28}
+    question = DNSQuestion(domain, type_map.get(record_type, 1))
+    
+    return header.pack() + question.pack(), query_id
+
+def send_dns_query(query_packet, server='8.8.8.8', port=53, timeout=5):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(timeout)
+    
+    try:
+        sock.sendto(query_packet, (server, port))
+        response, addr = sock.recvfrom(4096)
+        return response
+    finally:
+        sock.close()
+```
+
+## Implementation Steps
+
+1. **DNS Message Construction**:
+   - Build DNS headers with appropriate flags
+   - Encode domain names using DNS label format
+   - Create question sections for different record types
+   - Handle message ID tracking for response matching
+
+2. **UDP Communication**:
+   - Send queries to DNS servers over UDP
+   - Handle timeouts and retransmissions
+   - Parse responses and extract answers
+   - Deal with truncated responses (TC flag)
+
+3. **Response Parsing**:
+   - Parse DNS headers and validate response codes
+   - Extract answers from response sections
+   - Handle compression in domain name encoding
+   - Decode different record types properly
+
+4. **Recursive Resolution**:
+   - Start queries at root name servers
+   - Follow NS records to find authoritative servers
+   - Handle referrals and iterative queries
+   - Build complete resolution path
+
+5. **Caching Implementation**:
+   - Store responses with TTL-based expiration
+   - Implement cache lookup before sending queries
+   - Handle negative caching for NXDOMAIN responses
+   - Provide cache statistics and management
+
+## Advanced DNS Features
+
+```python
+class DNSCache:
+    def __init__(self, max_size=10000):
+        self.cache = {}
+        self.max_size = max_size
+        self.stats = {'hits': 0, 'misses': 0}
+    
+    def get(self, key):
+        if key in self.cache:
+            record, expiry = self.cache[key]
+            if time.time() < expiry:
+                self.stats['hits'] += 1
+                return record
+            else:
+                del self.cache[key]
+        
+        self.stats['misses'] += 1
+        return None
+    
+    def put(self, key, value, ttl):
+        if len(self.cache) >= self.max_size:
+            # Remove oldest entries
+            oldest_key = min(self.cache.keys(), 
+                           key=lambda k: self.cache[k][1])
+            del self.cache[oldest_key]
+        
+        expiry = time.time() + ttl
+        self.cache[key] = (value, expiry)
+
+class RecursiveResolver:
+    def __init__(self):
+        self.root_servers = [
+            '198.41.0.4',    # a.root-servers.net
+            '199.9.14.201',  # b.root-servers.net
+            '192.33.4.12',   # c.root-servers.net
+            # ... more root servers
+        ]
+        self.cache = DNSCache()
+    
+    def resolve_recursive(self, domain, record_type='A'):
+        # Check cache first
+        cache_key = (domain, record_type)
+        cached_result = self.cache.get(cache_key)
+        if cached_result:
+            return cached_result
+        
+        # Start with root servers
+        current_servers = self.root_servers
+        labels = domain.split('.')
+        
+        for i in range(len(labels)):
+            # Query current level
+            partial_domain = '.'.join(labels[i:])
+            response = self.query_servers(partial_domain, record_type, current_servers)
+            
+            if response.answers:
+                # Found answer
+                self.cache.put(cache_key, response.answers, response.ttl)
+                return response.answers
+            elif response.authority:
+                # Follow delegation
+                current_servers = [ns.target for ns in response.authority if ns.type == 'NS']
+            else:
+                raise DNSException("No answer or authority section")
+        
+        raise DNSException("Resolution failed")
+```
+
+## Extra Credit
+
+Extend your DNS resolver with these additional features:
+
+1. **Advanced Protocol Support**:
+   - Handle DNS over TCP for large responses
+   - Implement EDNS0 for extended features
+   - Support DNSSEC validation basics
+   - Handle international domain names (IDN)
+
+2. **Performance Optimizations**:
+   - Parallel queries to multiple servers
+   - Query pipelining and connection reuse
+   - Intelligent server selection based on RTT
+   - Adaptive timeout based on network conditions
+
+3. **Security Features**:
+   - Basic DNS security validation
+   - Protection against DNS poisoning
+   - Query randomization for security
+   - Rate limiting and abuse prevention
+
+4. **Monitoring and Debugging**:
+   - Detailed query logging and tracing
+   - Performance metrics and statistics
+   - DNS resolution path visualization
+   - Cache hit ratio monitoring
+
+5. **Configuration and Integration**:
+   - Support for /etc/hosts file
+   - Custom DNS server configuration
+   - Integration with system resolvers
+   - Configuration file support
+
+6. **Advanced Query Types**:
+   - Support for all common DNS record types
+   - Wildcard domain handling
+   - Zone transfer capabilities (AXFR)
+   - Dynamic DNS update support
+
+7. **High Availability**:
+   - Failover between DNS servers
+   - Load balancing across resolvers
+   - Health checking of upstream servers
+   - Automatic recovery from failures
+
+This challenge will give you deep insights into one of the Internet's most fundamental protocols and teach you about distributed systems, caching strategies, and network protocol implementation.

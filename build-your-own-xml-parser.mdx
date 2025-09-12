@@ -1,0 +1,306 @@
+---
+title: Build Your Own XML Parser
+summary: Create an XML parser that handles well-formed documents. Learn about tree data structures, parsing algorithms, and document validation.
+skills:
+- Parsing
+- Tree Data Structures
+- Document Processing
+- Validation
+difficulty: Advanced
+category: Parsing
+estimatedTime: 6-8 hours
+---
+
+This challenge is inspired by the need to parse XML (eXtensible Markup Language) documents, a fundamental format for data exchange and configuration files. XML parsing involves building tree structures from textual markup while handling various edge cases and validation requirements. By building your own XML parser, you'll learn about hierarchical data structures, parsing algorithms, and the complexity behind document processing.
+
+## Table of Contents
+
+XML parsing demonstrates several important computer science concepts:
+
+- **Tree Data Structures**: Build hierarchical representations of nested elements.
+- **Lexical Analysis**: Tokenize XML markup into meaningful components.
+- **Grammar Validation**: Ensure documents conform to XML specification rules.
+- **Memory Management**: Handle large documents efficiently with streaming or DOM approaches.
+
+Understanding XML parsing is essential for working with configuration files, web services, and data interchange systems.
+
+## The Challenge
+
+Your task is to implement an XML parser that can process well-formed XML documents and build in-memory representations (DOM-style trees). The parser should handle elements, attributes, text content, and various XML constructs while providing validation and error reporting.
+
+## XML Specification Support
+
+Your parser should handle the core XML 1.0 specification features:
+
+1. **Document Structure**:
+   - XML declaration (`<?xml version="1.0" encoding="UTF-8"?>`)
+   - Root element (exactly one)
+   - Properly nested elements
+   - Well-formed document validation
+
+2. **Elements and Attributes**:
+   - Start tags: `<element>`
+   - End tags: `</element>`
+   - Empty elements: `<element/>` or `<element></element>`
+   - Attributes: `<element attr="value" attr2='value2'>`
+
+3. **Content Types**:
+   - Text content with proper escaping
+   - CDATA sections: `<![CDATA[...]]>`
+   - Comments: `<!-- comment -->`
+   - Processing instructions: `<?target data?>`
+
+4. **Character Entities**:
+   - Predefined entities: `&lt;`, `&gt;`, `&amp;`, `&quot;`, `&apos;`
+   - Numeric character references: `&#65;`, `&#x41;`
+   - Character encoding handling
+
+## Supported Features
+
+Your XML parser should provide:
+
+1. **Multiple Parsing Models**:
+   - DOM (Document Object Model) - load entire document into memory
+   - SAX-style event-driven parsing for large documents
+   - Pull parser for selective parsing
+
+2. **Tree Navigation**:
+   - Parent-child relationships
+   - Sibling navigation
+   - Element search and traversal
+   - XPath-like query capabilities (basic)
+
+3. **Validation and Error Handling**:
+   - Well-formedness checking
+   - Detailed error messages with line/column numbers
+   - Recovery strategies for malformed documents
+
+## Example Usage
+
+Here's how your XML parser should work:
+
+```python
+# Basic DOM parsing
+xml_content = """<?xml version="1.0"?>
+<bookstore>
+    <book id="1" category="fiction">
+        <title>The Great Gatsby</title>
+        <author>F. Scott Fitzgerald</author>
+        <price currency="USD">12.99</price>
+    </book>
+    <book id="2" category="non-fiction">
+        <title>A Brief History of Time</title>
+        <author>Stephen Hawking</author>
+        <price currency="USD">15.99</price>
+    </book>
+</bookstore>"""
+
+# Parse into DOM tree
+parser = XMLParser()
+document = parser.parse(xml_content)
+
+# Navigate the tree
+root = document.root_element
+print(root.tag_name)  # "bookstore"
+
+books = root.get_children_by_tag("book")
+for book in books:
+    title = book.get_child("title").text_content
+    author = book.get_child("author").text_content
+    price = book.get_child("price")
+    currency = price.get_attribute("currency")
+    print(f"{title} by {author} - {price.text_content} {currency}")
+
+# Event-driven parsing for large files
+class BookHandler(XMLEventHandler):
+    def on_start_element(self, name, attributes):
+        if name == "book":
+            self.current_book = {"id": attributes.get("id")}
+    
+    def on_text_content(self, text):
+        if self.current_element == "title":
+            self.current_book["title"] = text
+    
+    def on_end_element(self, name):
+        if name == "book":
+            self.process_book(self.current_book)
+
+handler = BookHandler()
+parser = XMLEventParser(handler)
+parser.parse_file("large_catalog.xml")
+```
+
+## Complex XML Examples
+
+Your parser should handle these challenging cases:
+
+```xml
+<!-- Mixed content with text and elements -->
+<paragraph>
+    This is <emphasis>mixed content</emphasis> with both text and elements.
+</paragraph>
+
+<!-- CDATA sections -->
+<code><![CDATA[
+    if (x < y && y > z) {
+        return "complex logic";
+    }
+]]></code>
+
+<!-- Namespaces -->
+<root xmlns:book="http://example.com/book" xmlns="http://example.com/default">
+    <book:title>XML Processing</book:title>
+    <description>A comprehensive guide</description>
+</root>
+
+<!-- Character entities and Unicode -->
+<message>
+    Hello &quot;World&quot; &amp; everyone!
+    Unicode: &#x1F600; &#128512;
+</message>
+
+<!-- Processing instructions and comments -->
+<?xml-stylesheet type="text/xsl" href="style.xsl"?>
+<!-- This is a comment -->
+<document>
+    <?processing-instruction data?>
+    <content>Document body</content>
+</document>
+
+<!-- Complex nested structures -->
+<library>
+    <section name="Fiction">
+        <shelf number="1">
+            <book isbn="123">
+                <metadata>
+                    <title lang="en">Book Title</title>
+                    <authors>
+                        <author role="primary">Jane Doe</author>
+                        <author role="contributor">John Smith</author>
+                    </authors>
+                </metadata>
+            </book>
+        </shelf>
+    </section>
+</library>
+```
+
+## Implementation Steps
+
+1. **Lexical Analysis (Tokenization)**:
+   - Scan XML text character by character
+   - Identify tokens: start tags, end tags, text content, attributes
+   - Handle different context states (inside/outside tags)
+
+2. **Tree Building**:
+   - Create element nodes with tag names and attributes
+   - Build parent-child relationships
+   - Handle text nodes and mixed content
+   - Maintain element stack for proper nesting
+
+3. **Well-formedness Validation**:
+   - Ensure proper tag matching and nesting
+   - Validate attribute syntax and uniqueness
+   - Check for single root element
+   - Handle entity resolution
+
+4. **Error Handling**:
+   - Track line and column numbers
+   - Provide descriptive error messages
+   - Attempt error recovery where possible
+   - Report multiple validation issues
+
+5. **Memory Management**:
+   - Efficient node creation and linking
+   - Handle large documents without excessive memory usage
+   - Implement proper cleanup and garbage collection
+
+## Advanced Parsing Logic
+
+```python
+class XMLParser:
+    def __init__(self):
+        self.tokenizer = XMLTokenizer()
+        self.element_stack = []
+        self.current_position = Position(1, 1)
+    
+    def parse(self, xml_content):
+        tokens = self.tokenizer.tokenize(xml_content)
+        document = XMLDocument()
+        
+        for token in tokens:
+            if token.type == TokenType.START_TAG:
+                element = self.create_element(token)
+                if not self.element_stack:
+                    document.root_element = element
+                else:
+                    self.element_stack[-1].add_child(element)
+                
+                if not token.is_empty_element:
+                    self.element_stack.append(element)
+                    
+            elif token.type == TokenType.END_TAG:
+                if not self.element_stack:
+                    raise XMLParseError("Unexpected end tag", self.current_position)
+                
+                current_element = self.element_stack[-1]
+                if current_element.tag_name != token.name:
+                    raise XMLParseError("Mismatched tags", self.current_position)
+                
+                self.element_stack.pop()
+                
+            elif token.type == TokenType.TEXT:
+                if self.element_stack:
+                    text_node = TextNode(token.content)
+                    self.element_stack[-1].add_child(text_node)
+        
+        return document
+```
+
+## Extra Credit
+
+Extend your XML parser with these additional features:
+
+1. **Namespace Support**:
+   - Parse namespace declarations and prefixes
+   - Maintain namespace context during parsing
+   - Validate namespace usage and scope
+   - Support default namespaces
+
+2. **Advanced Validation**:
+   - DTD (Document Type Definition) validation
+   - XML Schema (XSD) basic support
+   - Custom validation rules and constraints
+   - Entity reference resolution
+
+3. **Performance Optimizations**:
+   - Streaming parser for very large documents
+   - Memory-efficient tree building
+   - Lazy loading of document sections
+   - Parallel processing for independent subtrees
+
+4. **XPath Query Engine**:
+   - Basic XPath expression evaluation
+   - Element selection by path and attributes
+   - Support for XPath functions and operators
+   - Query optimization techniques
+
+5. **Serialization and Formatting**:
+   - Convert DOM trees back to XML text
+   - Pretty-printing with proper indentation
+   - Configurable output formatting
+   - Character encoding handling
+
+6. **Error Recovery**:
+   - Attempt to recover from malformed XML
+   - Skip invalid sections while preserving valid parts
+   - Suggest corrections for common XML errors
+   - Partial parsing of damaged documents
+
+7. **Extensions and Integration**:
+   - Support for XML inclusions (XInclude)
+   - XSLT transformation basic support
+   - Integration with validation libraries
+   - Plugin architecture for custom processing
+
+This challenge will give you deep insights into document processing, tree algorithms, and the complexity involved in handling structured markup languages. The skills learned here are directly applicable to HTML parsing, configuration file processing, and data interchange systems.
